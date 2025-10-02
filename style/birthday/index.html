@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Birthday!</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (生日風格) --- */
+        :root {
+            --bg-color: #FFF5E1; /* 奶油黃背景 */
+            --primary-color: #FF6B6B; /* 珊瑚紅 */
+            --secondary-color: #4ECDC4; /* 薄荷綠 */
+            --accent-color: #FFD166; /* 燭光黃 */
+            --text-color: #4A4A4A;
+            --modal-bg: #FFFFFF;
+            --font-title: 'Pacifico', cursive;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: linear-gradient(to bottom, #FFEAA7, var(--bg-color));
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景動畫容器 (氣球) --- */
+        #balloon-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .balloon {
+            position: absolute; bottom: -150px;
+            width: 60px; height: 75px;
+            background-color: var(--primary-color);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            opacity: 0.7;
+            animation: floatUp ease-in forwards;
+        }
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -10px; left: 50%;
+            transform: translateX(-50%);
+            width: 2px; height: 20px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* --- 派對彩旗裝飾 --- */
+        .party-garland {
+            position: absolute; top: 0; left: 0; width: 100%;
+            z-index: 5; pointer-events: none; text-align: center;
+        }
+        .party-garland svg { width: 100%; height: 50px; }
+
+        /* --- 主畫面 --- */
+        .main-screen { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; padding: 20px; text-align: center; }
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 4rem;
+            color: var(--primary-color);
+            text-shadow: 2px 2px 0px #fff;
+            margin-bottom: 20px;
+            animation: bounceIn 1s ease-out;
+        }
+
+        /* --- 蛋糕互動區 --- */
+        .cake-wrapper { cursor: pointer; width: 250px; height: 250px; margin-bottom: 20px; position: relative; transition: transform 0.2s ease; -webkit-tap-highlight-color: transparent; }
+        .cake-wrapper:hover { transform: scale(1.05); }
+        .cake-wrapper:active { transform: scale(0.98); }
+        .cake-svg { width: 100%; height: 100%; overflow: visible; }
+        /* 蠟燭火焰動畫 */
+        .candle-flame { transform-origin: bottom center; animation: flicker 1s infinite ease-in-out; }
+        .smoke { opacity: 0; transition: opacity 0.5s; transform-origin: bottom center; }
+        /* 點擊後吹熄蠟燭的 class */
+        .cake-wrapper.blown-out .candle-flame { animation: none; opacity: 0; transition: opacity 0.2s; }
+        .cake-wrapper.blown-out .smoke { opacity: 1; animation: smoke-rise 2s ease-out forwards; }
+
+        .instruction-text { font-size: 1.1rem; color: #aaa; margin-bottom: 20px; }
+        .open-button {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); color: white;
+            border: none; padding: 15px 40px; font-size: 1.3rem; font-weight: bold;
+            border-radius: 50px; font-family: var(--font-body);
+            letter-spacing: 3px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.2s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+        .open-button:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        .page-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: #ccc; z-index: 5; }
+        
+        /* --- 主 Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(255, 234, 167, 0.7); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.5s 0.3s, visibility 0.5s 0.3s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); color: var(--text-color);
+            border: 1px solid #eee;
+            width: 100%; max-width: 400px; border-radius: 16px;
+            padding: 40px 25px 30px; position: relative; text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            transform: scale(0.95); transition: transform 0.5s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 2rem; color: #ccc; background: none; border: none; cursor: pointer; line-height: 1; padding: 5px; z-index: 10; transition: color 0.2s; }
+        .close-btn:hover { color: var(--primary-color); }
+        .modal-title { font-family: var(--font-title); color: var(--primary-color); font-size: 3rem; margin-bottom: 20px; }
+        /* 圖片輪播 */
+        .slider-container { border-radius: 8px; border: 1px solid #f0e0e6; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 20px; position: relative; background-color: #fff; }
+        .slides-wrapper { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav { background-color: rgba(255, 255, 255, 0.7); color: #333; position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .slider-nav:hover { background-color: white; }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        .caption-container { font-size: 1.1rem; color: #888; font-style: italic; min-height: 2.4em; line-height: 1.4; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.8; color: #555; white-space: pre-line; }
+
+        /* --- 兌換獎品禮物盒 --- */
+        .prize-trigger { position: absolute; bottom: 20px; right: 20px; width: 60px; height: 60px; cursor: pointer; z-index: 15; transition: transform 0.2s; }
+        .prize-trigger:hover { transform: scale(1.1) rotate(-5deg); }
+        .prize-trigger svg { filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.2)); animation: shake 3s infinite ease-in-out 1s; }
+
+        /* --- 兌換獎品 Modal --- */
+        #prize-modal-overlay { z-index: 200; background-color: rgba(0,0,0,0.8); }
+        .prize-modal-content { padding: 40px 30px; border: none; background: #fff; }
+        .prize-qr-code { width: 100%; max-width: 200px; height: auto; border: 1px solid #ddd; padding: 5px; margin-bottom: 20px; }
+        .prize-text { font-size: 1.1rem; color: #333; line-height: 1.6; }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes floatUp { to { transform: translateY(-120vh) rotate(30deg); opacity: 0; } }
+        @keyframes bounceIn { 0%{transform:scale(.3);opacity:0} 50%{transform:scale(1.05);opacity:1} 70%{transform:scale(.9)} 100%{transform:scale(1)} }
+        @keyframes flicker { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(1.05)} }
+        @keyframes smoke-rise { 0% { opacity: 1; transform: translateY(0) scale(0.5); } 100% { opacity: 0; transform: translateY(-30px) scale(1); } }
+        @keyframes shake { 0%, 5%, 100% {transform:rotate(0)} 1% {transform:rotate(-5deg)} 2% {transform:rotate(5deg)} 3% {transform:rotate(-3deg)} 4% {transform:rotate(3deg)} }
+
+        @media (max-width: 600px) { .main-title { font-size: 3rem; } .cake-wrapper { width: 220px; height: 220px; } }
+    </style>
+</head>
+<body>
+
+    <div id="balloon-container"></div>
+    
+    <div class="party-garland">
+        <svg viewBox="0 0 500 50"><path d="M0 20 Q 50 40, 100 20 T 200 20 T 300 20 T 400 20 T 500 20" stroke="#ccc" stroke-width="2" fill="none"/><path d="M50 20 L40 40 L60 40 Z" fill="#FF6B6B"/><path d="M150 20 L140 40 L160 40 Z" fill="#4ECDC4"/><path d="M250 20 L240 40 L260 40 Z" fill="#FFD166"/><path d="M350 20 L340 40 L360 40 Z" fill="#FF6B6B"/><path d="M450 20 L440 40 L460 40 Z" fill="#4ECDC4"/></svg>
+    </div>
+
+    <main class="main-screen">
+        <h1 class="main-title">Happy Birthday</h1>
+
+        <div class="cake-wrapper" id="triggerGift" role="button" aria-label="吹熄蠟燭">
+            <svg class="cake-svg" viewBox="0 0 200 200">
+                <defs><filter id="item-shadow"><feDropShadow dx="0" dy="8" stdDeviation="5" flood-color="#000" flood-opacity="0.15"/></filter></defs>
+                <g class="cake-group" filter="url(#item-shadow)">
+                    <!-- 盤子 -->
+                    <ellipse cx="100" cy="180" rx="90" ry="20" fill="#fff"/>
+                    <!-- 蛋糕 -->
+                    <rect x="30" y="120" width="140" height="60" fill="#FFDAB9" rx="5"/>
+                    <rect x="30" y="120" width="140" height="20" fill="#FFE4B5"/>
+                    <ellipse cx="100" cy="120" rx="70" ry="20" fill="#fff"/>
+                    <circle cx="60" cy="120" r="8" fill="#FF6B6B"/>
+                    <circle cx="100" cy="120" r="8" fill="#4ECDC4"/>
+                    <circle cx="140" cy="120" r="8" fill="#FF6B6B"/>
+                    <!-- 蠟燭 -->
+                    <rect x="95" y="70" width="10" height="50" fill="#fff"/>
+                    <rect x="95" y="70" width="10" height="15" fill="#4ECDC4"/>
+                    <path class="candle-flame" d="M100 70 Q 105 60, 100 50 Q 95 60, 100 70 Z" fill="#FFD166"/>
+                    <path class="smoke" d="M100 70 Q 105 60, 100 50" stroke="#aaa" stroke-width="2" fill="none"/>
+                </g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 許個願，然後點擊蛋糕！ ↓</p>
+        <button class="open-button" id="triggerBtn">許願</button>
+    </main>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <!-- 主 Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">For You</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>親愛的，<br><br>在妳生命中最特別的這一天，<br>願所有的快樂、所有的幸福、<br>所有的溫馨、所有的好運都圍繞在妳身邊。<br>生日快樂！🎂</p></div>
+            
+            <!-- 兌換獎品禮物盒 -->
+            <div class="prize-trigger" id="prizeTrigger">
+                <svg viewBox="0 0 100 100"><rect x="15" y="40" width="70" height="50" fill="#4ECDC4"/><rect x="10" y="30" width="80" height="15" fill="#FF6B6B"/><path d="M45 30 V 10 L 30 20 L 45 30 Z M55 30 V10 L 70 20 L 55 30 Z" fill="#FF6B6B"/><path d="M45 40 V90 M55 40 V90" stroke="white" stroke-width="4"/></svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 兌換獎品 Modal -->
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal-content prize-modal-content">
+            <button class="close-btn" id="closePrizeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">生日禮物券</h2>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=BirthdayPresentVoucher" alt="兌換憑證" class="prize-qr-code">
+            <p class="prize-text">憑此畫面可兌換<br><strong>「一份精心準備的生日禮物」</strong><br>希望你會喜歡！</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryItems = [
+                { src: "https://picsum.photos/id/1025/800/600", caption: "去年的生日派對，笑得好開心！" },
+                { src: "https://picsum.photos/id/1028/800/600", caption: "每一次的慶祝，都因為有你而特別。"},
+                { src: "https://picsum.photos/id/1074/800/600", caption: "新的一歲，願你夢想成真。" },
+            ];
+
+            const giftWrapper = document.getElementById('triggerGift'), openBtn = document.getElementById('triggerBtn'), modal = document.getElementById('modal'), closeBtn = document.getElementById('closeBtn'), balloonContainer = document.getElementById('balloon-container'), slidesWrapper = document.getElementById('slidesWrapper'), captionEl = document.getElementById('caption'), prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), prizeTrigger = document.getElementById('prizeTrigger'), prizeModal = document.getElementById('prizeModal'), closePrizeBtn = document.getElementById('closePrizeBtn');
+            let currentSlide = 0;
+
+            function setupSlider() { slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="生日照片"></div>`).join(''); showSlide(0); }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+            function openModal() {
+                // 觸發吹蠟燭特效
+                giftWrapper.classList.add('blown-out');
+                // 延遲打開 Modal
+                setTimeout(() => {
+                    modal.classList.add('active');
+                    showSlide(0);
+                }, 500); // 讓煙霧飄一會兒
+            }
+            function closeModal() {
+                modal.classList.remove('active');
+                // 重置蠟燭狀態
+                setTimeout(() => giftWrapper.classList.remove('blown-out'), 500);
+            }
+            function openPrizeModal() { prizeModal.classList.add('active'); }
+            function closePrizeModal() { prizeModal.classList.remove('active'); }
+
+            function createBalloon() {
+                const colors = ['#FF6B6B', '#4ECDC4', '#FFD166', '#C38D9E'];
+                const balloon = document.createElement('div');
+                balloon.classList.add('balloon');
+                balloon.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                balloon.style.left = Math.random() * 90 + 'vw';
+                const duration = Math.random() * 8 + 8; // 8-16s
+                balloon.style.animationDuration = `${duration}s`;
+                const scale = Math.random() * 0.4 + 0.8; // 0.8 to 1.2
+                balloon.style.transform = `scale(${scale})`;
+                balloonContainer.appendChild(balloon);
+                setTimeout(() => balloon.remove(), duration * 1000);
+            }
+
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            prizeTrigger.addEventListener('click', openPrizeModal);
+            closePrizeBtn.addEventListener('click', closePrizeModal);
+            prizeModal.addEventListener('click', (e) => { if (e.target === prizeModal) closePrizeModal(); });
+
+            setupSlider();
+            setInterval(createBalloon, 800);
+        });
+    </script>
+</body>
+</html>```
