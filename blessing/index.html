@@ -157,7 +157,109 @@
         color: #c0392b; /* 滑鼠懸停時變為主題紅色 */
         transform: translateX(-4px); /* 連結向左輕微移動，產生動感 */
     }
-
+        /* --- Modal 彈出視窗樣式 --- */
+    .modal-overlay {
+        position: fixed; /* 固定在畫面上 */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6); /* 半透明黑色背景 */
+        display: none; /* 預設隱藏 */
+        justify-content: center;
+        align-items: center;
+        z-index: 1000; /* 確保在最上層 */
+        opacity: 0; /* 預設透明，用於動畫 */
+        transition: opacity 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+    
+    .modal-content {
+        background: #ffffff;
+        color: #333;
+        padding: 30px 40px;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        width: 90%;
+        max-width: 450px;
+        text-align: center;
+        position: relative;
+        transform: scale(0.95); /* 用於動畫 */
+        transition: transform 0.3s ease;
+    }
+    
+    .modal-overlay.active .modal-content {
+        transform: scale(1);
+    }
+    
+    .modal-content .close-button {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 2.5em;
+        font-weight: 300;
+        color: #aaa;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+    
+    .modal-content .close-button:hover {
+        color: #333;
+    }
+    
+    .modal-content h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.8em;
+    }
+    
+    .modal-content p {
+        margin-bottom: 30px;
+        color: #666;
+        line-height: 1.6;
+    }
+    
+    .social-links {
+        display: flex;
+        flex-direction: column;
+        gap: 15px; /* 按鈕之間的間距 */
+    }
+    
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 1.1em;
+        font-weight: 600;
+        color: white;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .social-btn svg {
+        margin-right: 10px;
+    }
+    
+    .social-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Instagram 專屬漸層色 */
+    .social-btn.instagram {
+        background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    }
+    
+    /* Threads 專屬黑色 */
+    .social-btn.threads {
+        background-color: #000000;
+    }
     </style>
 </head>
 <body>
@@ -282,6 +384,31 @@
         </div>
     </div>
     <!-- ================================== -->
+    <!-- ===== 新增的 JavaScript 腳本 ===== -->
+    <script>
+        // 1. 取得需要的 HTML 元素
+        const backToHomeLink = document.getElementById('back-to-home-link');
+        const modalOverlay = document.getElementById('social-modal-overlay');
+        const closeButton = document.querySelector('.close-button');
 
+        // 2. 當「返回主頁」連結被點擊時
+        backToHomeLink.addEventListener('click', function(event) {
+            event.preventDefault(); // 阻止連結跳轉的預設行為
+            modalOverlay.classList.add('active'); // 顯示 Modal
+        });
+
+        // 3. 當「關閉按鈕」被點擊時
+        closeButton.addEventListener('click', function() {
+            modalOverlay.classList.remove('active'); // 隱藏 Modal
+        });
+
+        // 4. 當點擊 Modal 外部的灰色區域時
+        modalOverlay.addEventListener('click', function(event) {
+            // 檢查點擊的目標是否是灰色背景本身
+            if (event.target === modalOverlay) {
+                modalOverlay.classList.remove('active'); // 隱藏 Modal
+            }
+        });
+    </script>
 </body>
 </html>
