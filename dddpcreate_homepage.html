@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dddpcreate</title>
+    <style>
+        /* --- 全域重置與基本設定 --- */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #ffffff; /* 白色背景 */
+            color: #333; /* 主要文字顏色為深灰色 */
+            line-height: 1.7;
+        }
+
+        /* --- 容器統一樣式 --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        a {
+            color: #c0392b; /* 典雅的紅色連結 */
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: #962d22;
+        }
+
+        /* --- 頁首 (Header) 設計 --- */
+        .header {
+            text-align: center;
+            padding: 40px 0 20px 0;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 3em;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        /* --- 導覽列 (Navigation) 設計 --- */
+        .nav {
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .nav a {
+            color: #555;
+            margin: 0 25px;
+            font-size: 1.1em;
+            font-weight: 500;
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #c0392b;
+            transition: width 0.3s ease;
+        }
+        
+        .nav a:hover {
+            color: #000;
+        }
+
+        .nav a:hover::after {
+            width: 100%;
+        }
+        
+        /* --- 主標題區 --- */
+        .main-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .main-title h2 {
+            font-size: 2.5em;
+            margin: 0;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+        
+        .main-title h2::after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 3px;
+            background: #c0392b;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* --- 畫廊 (Gallery) 設計 --- */
+        .gallery-grid {
+            display: grid;
+            /* 這行程式碼會自動建立響應式欄位，電腦上看是多欄，手機上看是單欄 */
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 35px;
+            padding-bottom: 60px;
+        }
+
+        .card {
+            background-color: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            overflow: hidden; /* 確保圖片在圓角內 */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* 柔和的陰影 */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px); /* 懸浮時向上移動 */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* 懸浮時陰影加深 */
+        }
+
+        .card-image {
+            height: 220px;
+            overflow: hidden;
+        }
+        
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 讓圖片填滿容器且不變形 */
+            transition: transform 0.4s ease;
+        }
+        
+        .card:hover .card-image img {
+            transform: scale(1.05); /* 懸浮時圖片輕微放大 */
+        }
+        
+        .card-content {
+            padding: 25px;
+        }
+
+        .card-content h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.5em;
+        }
+        
+        .card-content p {
+            margin: 0;
+            color: #666;
+            font-size: 1em;
+        }
+
+        /* --- 頁尾 (Footer) 設計 --- */
+        .footer {
+            background-color: #f8f8f8;
+            color: #888;
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 40px;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="container">
+            <h1>dddpcreate</h1>
+        </div>
+    </header>
+
+    <nav class="nav">
+        <div class="container">
+            <a href="/">首頁</a>
+            <a href="/blessing/">祝福網站</a>
+            <a href="/shop/">商店</a>
+            <a href="#">網頁小工具</a>
+            <a href="#">作品集</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        
+        <div class="main-title">
+            <h2>創作領域</h2>
+        </div>
+
+        <!-- 畫廊區塊 -->
+        <div class="gallery-grid">
+            
+            <!-- 卡片 1: 祝福網站 -->
+            <a href="/blessing/" class="card" style="text-decoration: none; color: inherit;">
+                <div class="card-image">
+                    <!-- 建議替換成 600x400 解析度的圖片 -->
+                    <img src="https://via.placeholder.com/600x400/FFC0CB/333?text=Blessing" alt="客製化祝福網站">
+                </div>
+                <div class="card-content">
+                    <h3>客製化祝福網站</h3>
+                    <p>為特別的時刻，打造獨一無二的線上祝福與紀念。</p>
+                </div>
+            </a>
+
+            <!-- 卡片 2: 作品集 -->
+            <a href="#" class="card" style="text-decoration: none; color: inherit;">
+                <div class="card-image">
+                    <img src="https://via.placeholder.com/600x400/A9A9A9/fff?text=Portfolio" alt="作品集">
+                </div>
+                <div class="card-content">
+                    <h3>作品集</h3>
+                    <p>網頁設計、3D列印、數位繪畫等多元創作的展示。</p>
+                </div>
+            </a>
+
+            <!-- 卡片 3: 商店 -->
+            <a href="/shop/" class="card" style="text-decoration: none; color: inherit;">
+                <div class="card-image">
+                    <img src="https://via.placeholder.com/600x400/87CEEB/fff?text=Shop" alt="商店">
+                </div>
+                <div class="card-content">
+                    <h3>商店</h3>
+                    <p>將創意化為實體，探索獨特的設計商品與數位資源。</p>
+                </div>
+            </a>
+            
+            <!-- 卡片 4: 網頁小工具 -->
+            <a href="#" class="card" style="text-decoration: none; color: inherit;">
+                <div class="card-image">
+                    <img src="https://via.placeholder.com/600x400/98FB98/333?text=Tools" alt="網頁小工具">
+                </div>
+                <div class="card-content">
+                    <h3>網頁小工具</h3>
+                    <p>分享實用且有趣的網頁工具與程式碼片段。</p>
+                </div>
+            </a>
+            
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 dddpcreate. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
