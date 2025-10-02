@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>風格總覽 | Gallery</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg-color: #ffffff;
+            --text-color: #212529;
+            --text-color-light: #6c757d;
+            --chip-bg-color: #e9ecef;
+            --chip-text-color: #495057;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --shadow-color-hover: rgba(0, 0, 0, 0.1);
+            --accent-color: #007bff;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .gallery-header {
+            max-width: 600px;
+            margin: 0 auto 2.5rem auto;
+            text-align: center;
+        }
+
+        .gallery-header h1 {
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .gallery-header p {
+            color: var(--text-color-light);
+            font-size: 1.1rem;
+        }
+
+        .search-container {
+            margin-bottom: 2.5rem;
+            position: sticky;
+            top: 1rem;
+            z-index: 10;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 0.75rem 1.25rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            transition: box-shadow 0.2s ease-in-out;
+        }
+        #search-input:focus {
+            outline: none;
+            box-shadow: 0 4px 20px var(--shadow-color-hover);
+            border-color: var(--accent-color);
+        }
+
+        .gallery-grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+
+        .style-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            border-radius: 12px;
+            background-color: var(--card-bg-color);
+            box-shadow: 0 4px 15px var(--shadow-color);
+            overflow: hidden;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .style-card-link:hover,
+        .style-card-link:focus {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px var(--shadow-color-hover);
+            outline: none;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .style-card-link {
+                transition: none;
+            }
+        }
+
+        .card-preview {
+            aspect-ratio: 4 / 3;
+            background-color: #f1f3f5;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .preview-iframe-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .preview-iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            /* Scale down iframe content to give a better overview */
+            transform: scale(0.5);
+            transform-origin: 0 0;
+            width: 200%;
+            height: 200%;
+        }
+
+        .iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .card-content {
+            padding: 1rem 1.25rem;
+        }
+
+        .card-title {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            /* Limit height to 3 lines and add ellipsis */
+            max-height: calc(1.5em * 3 + 0.5rem * 2); 
+            line-height: 1.5;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .feature-chip {
+            background-color: var(--chip-bg-color);
+            color: var(--chip-text-color);
+            padding: 0.125rem 0.625rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--text-color-light);
+            font-size: 1.2rem;
+            display: none; /* Initially hidden */
+        }
+    </style>
+</head>
+<body>
+
+    <header class="gallery-header">
+        <h1>風格總覽</h1>
+        <p>點擊卡片以在新分頁預覽完整的風格頁面。</p>
+    </header>
+
+    <div class="search-container">
+        <input type="search" id="search-input" placeholder="搜尋風格名稱或特徵…">
+    </div>
+
+    <main id="gallery-grid" class="gallery-grid"></main>
+
+    <div id="no-results" class="no-results">
+        <p>找不到符合的風格 😅</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const stylesData = [
+                { name: "可愛風格", slug: "cute", features: [], url: "/style/cute/", thumb: "/style/cute/thumb.jpg" },
+                { name: "黑白簡約風", slug: "minimalist", features: [], url: "/style/minimalist/", thumb: "/style/minimalist/thumb.jpg" },
+                { name: "海洋風格", slug: "ocean", features: [], url: "/style/ocean/", thumb: "/style/ocean/thumb.jpg" },
+                { name: "叢林風格", slug: "jungle", features: [], url: "/style/jungle/", thumb: "/style/jungle/thumb.jpg" },
+                { name: "聖誕節風格", slug: "christmas", features: [], url: "/style/christmas/", thumb: "/style/christmas/thumb.jpg" },
+                { name: "萬聖節風格", slug: "halloween", features: [], url: "/style/halloween/", thumb: "/style/halloween/thumb.jpg" },
+                { name: "農曆新年風格", slug: "lunarnewyear", features: [], url: "/style/lunarnewyear/", thumb: "/style/lunarnewyear/thumb.jpg" },
+                { name: "跨年新年風格", slug: "newyear", features: [], url: "/style/newyear/", thumb: "/style/newyear/thumb.jpg" },
+                { name: "元宵節風格", slug: "lantern", features: [], url: "/style/lantern/", thumb: "/style/lantern/thumb.jpg" },
+                { name: "端午節風格", slug: "dragonboat", features: [], url: "/style/dragonboat/", thumb: "/style/dragonboat/thumb.jpg" },
+                { name: "教師節風格", slug: "teachersday", features: [], url: "/style/teachersday/", thumb: "/style/teachersday/thumb.jpg" },
+                { name: "情人節風格", slug: "valentine", features: [], url: "/style/valentine/", thumb: "/style/valentine/thumb.jpg" }
+            ];
+
+            const galleryGrid = document.getElementById('gallery-grid');
+            const searchInput = document.getElementById('search-input');
+            const noResultsMessage = document.getElementById('no-results');
+
+            const createIframePreview = (style) => {
+                const container = document.createElement('div');
+                container.className = 'preview-iframe-container';
+                
+                const iframe = document.createElement('iframe');
+                iframe.src = style.url;
+                iframe.loading = 'lazy';
+                iframe.sandbox = 'allow-same-origin allow-scripts';
+                iframe.title = `${style.name} 預覽`;
+
+                const overlay = document.createElement('div');
+                overlay.className = 'iframe-overlay';
+
+                container.appendChild(iframe);
+                container.appendChild(overlay);
+                return container;
+            };
+
+            const renderGallery = (items) => {
+                galleryGrid.innerHTML = '';
+                if (items.length === 0) {
+                    noResultsMessage.style.display = 'block';
+                } else {
+                    noResultsMessage.style.display = 'none';
+                }
+
+                items.forEach(style => {
+                    const cardLink = document.createElement('a');
+                    cardLink.className = 'style-card-link';
+                    cardLink.href = style.url;
+                    cardLink.target = '_blank';
+                    cardLink.rel = 'noopener noreferrer';
+
+                    const preview = document.createElement('div');
+                    preview.className = 'card-preview';
+
+                    if (style.thumb) {
+                        const img = document.createElement('img');
+                        img.src = style.thumb;
+                        img.alt = `${style.name} 縮圖`;
+                        img.loading = 'lazy';
+                        
+                        img.onerror = () => {
+                            const iframePreview = createIframePreview(style);
+                            preview.innerHTML = '';
+                            preview.appendChild(iframePreview);
+                        };
+                        
+                        preview.appendChild(img);
+                    } else {
+                        const iframePreview = createIframePreview(style);
+                        preview.appendChild(iframePreview);
+                    }
+                    
+                    const content = document.createElement('div');
+                    content.className = 'card-content';
+                    
+                    const title = document.createElement('h3');
+                    title.className = 'card-title';
+                    title.textContent = style.name;
+                    
+                    const features = document.createElement('div');
+                    features.className = 'card-features';
+                    style.features.forEach(feature => {
+                        const chip = document.createElement('span');
+                        chip.className = 'feature-chip';
+                        chip.textContent = feature;
+                        features.appendChild(chip);
+                    });
+
+                    content.appendChild(title);
+                    content.appendChild(features);
+                    cardLink.appendChild(preview);
+                    cardLink.appendChild(content);
+                    galleryGrid.appendChild(cardLink);
+                });
+            };
+
+            const filterItems = () => {
+                const query = searchInput.value.trim();
+                const keywords = query.toLowerCase().split(' ').filter(k => k);
+                
+                if (keywords.length === 0) {
+                    renderGallery(stylesData);
+                    return;
+                }
+
+                const filteredData = stylesData.filter(style => {
+                    const searchableText = (style.name + ' ' + style.features.join(' ')).toLowerCase();
+                    return keywords.every(keyword => searchableText.includes(keyword));
+                });
+                
+                renderGallery(filteredData);
+            };
+
+            searchInput.addEventListener('input', filterItems);
+            renderGallery(stylesData);
+        });
+    </script>
+</body>
+</html>```
