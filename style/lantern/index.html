@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>元宵節快樂!</title>
+    
+    <!-- 引入 Google Fonts: Noto Sans TC 作為內文備用 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (元宵風格) --- */
+        :root {
+            --bg-color: #0F172A; /* 深夜藍 */
+            --primary-color: #FF7043; /* 暖橙色 (燈光) */
+            --secondary-color: #FFD54F; /* 金黃色 */
+            --accent-color: #F5F5F5; /* 湯圓白 */
+            --text-color: #F0F0F0;
+            --modal-bg: #FFF8E1; /* 暖紙色 */
+            --modal-text-color: #3E2723;
+            --font-title: 'BiauKai', '標楷體', DFKai-SB, serif; 
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: radial-gradient(circle at 50% 30%, #2C3E50, var(--bg-color)); /* 模擬月光 */
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景動畫容器 (花燈) --- */
+        #lantern-bg-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .bg-lantern { position: absolute; bottom: -150px; opacity: 0.6; animation: floatUpSlow linear forwards; }
+
+        /* --- 裝飾 (粽子、燈謎) --- */
+        .decoration { position: absolute; pointer-events: none; z-index: 1; filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.5)); }
+        .zongzi-decor { top: 20px; right: 20px; width: 80px; transform: rotate(10deg); animation: swing 4s infinite ease-in-out; }
+        .riddle-decor { top: 100px; left: 20px; width: 60px; animation: swing 5s infinite ease-in-out 1s; }
+
+        /* --- 主畫面 --- */
+        .main-screen { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; padding: 20px; text-align: center; }
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            text-shadow: 0 0 10px var(--primary-color), 2px 2px 0 #000;
+            margin-bottom: 20px;
+            animation: glow 3s infinite ease-in-out;
+        }
+
+        /* --- 湯圓互動區 --- */
+        .tangyuan-wrapper { cursor: pointer; width: 220px; height: 220px; margin-bottom: 40px; position: relative; transition: transform 0.2s ease; -webkit-tap-highlight-color: transparent; }
+        .tangyuan-wrapper:hover { transform: scale(1.05); }
+        .tangyuan-wrapper:active { transform: scale(0.98); }
+        .tangyuan-svg { width: 100%; height: 100%; overflow: visible; }
+        .steam-group { animation: steamRise 2s infinite linear; opacity: 0; transform-origin: center; }
+
+        .instruction-text { font-size: 1.1rem; color: var(--secondary-color); margin-bottom: 20px; letter-spacing: 1px; }
+        .open-button {
+            background: linear-gradient(to bottom, var(--primary-color), #E64A19); color: #FFF;
+            border: 2px solid var(--secondary-color); padding: 15px 50px; font-size: 1.5rem;
+            border-radius: 10px; font-family: var(--font-title); font-weight: bold;
+            letter-spacing: 3px; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 112, 67, 0.4);
+            transition: all 0.2s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255, 112, 67, 0.5); filter: brightness(1.1); }
+        .open-button:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(255, 112, 67, 0.4); }
+
+        /* --- Footer --- */
+        .page-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: #90A4AE; z-index: 5; }
+
+        /* --- 主 Modal (照片輪播) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); color: var(--modal-text-color);
+            border: 4px double var(--primary-color); /* 中式雙線框 */
+            width: 100%; max-width: 400px; border-radius: 8px;
+            padding: 35px 25px; position: relative; text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transform: translateY(50px); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><text x="50%" y="50%" font-size="20" fill="rgba(255,112,67,0.05)" text-anchor="middle" dominant-baseline="middle">團圓</text></svg>'); /* 淡淡的背景紋理 */
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .close-btn { position: absolute; top: 10px; right: 10px; font-size: 2rem; color: #8D6E63; background: none; border: none; cursor: pointer; line-height: 1; padding: 5px; z-index: 10; transition: color 0.2s; }
+        .close-btn:hover { color: var(--primary-color); }
+        .modal-title { font-family: var(--font-title); font-weight: bold; color: #BF360C; font-size: 2.5rem; margin-bottom: 20px; }
+        /* 圖片輪播 */
+        .slider-container { border-radius: 4px; border: 2px solid #D7CCC8; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 15px; position: relative; background-color: #FFF; }
+        .slides-wrapper { display: flex; transition: transform 0.4s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav { background-color: rgba(255, 112, 67, 0.7); color: #FFF; position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .slider-nav:hover { background-color: var(--primary-color); }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        .caption-container { font-size: 1rem; color: #5D4037; font-weight: bold; min-height: 2.4em; line-height: 1.2; padding: 0 10px; margin-bottom: 20px; font-family: var(--font-title); }
+        .modal-message { font-size: 1.1rem; line-height: 1.7; color: #4E342E; white-space: pre-line; }
+
+        /* --- 兌換獎品圖示 (兔子燈籠) --- */
+        .prize-trigger { position: absolute; bottom: 15px; right: 15px; width: 70px; height: 70px; cursor: pointer; z-index: 15; transition: transform 0.2s; animation: bounceGentle 3s infinite ease-in-out; }
+        .prize-trigger:hover { transform: scale(1.1) rotate(5deg); animation-play-state: paused; }
+        .prize-trigger svg { filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3)); }
+
+        /* --- 兌換獎品 Modal --- */
+        #prize-modal-overlay { z-index: 200; }
+        .prize-modal-content { padding: 40px 30px; border-color: var(--secondary-color); background-color: #FFF; }
+        .prize-qr-code { width: 100%; max-width: 200px; height: auto; border: 1px solid #ddd; pading: 5px; background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .prize-text { font-size: 1.1rem; color: #555; font-family: var(--font-title); }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes floatUpSlow { from { transform: translateY(0) rotate(0); } to { transform: translateY(-120vh) rotate(10deg); } }
+        @keyframes glow { 0%, 100% { text-shadow: 0 0 10px var(--primary-color), 2px 2px 0 #000; } 50% { text-shadow: 0 0 25px var(--primary-color), 2px 2px 0 #000; } }
+        @keyframes steamRise { 0% { transform: translateY(0) scale(1); opacity: 0.6; } 50% { opacity: 0.3; } 100% { transform: translateY(-40px) scale(1.5); opacity: 0; } }
+        @keyframes swing { 0%,100%{transform:rotate(10deg)} 50%{transform:rotate(-5deg)} }
+        @keyframes bounceGentle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        @media (max-width: 600px) { .main-title { font-size: 4rem; } .tangyuan-wrapper { width: 180px; height: 180px; } }
+    </style>
+</head>
+<body>
+
+    <div id="lantern-bg-container"></div>
+
+    <!-- 裝飾彩蛋：粽子 -->
+    <div class="decoration zongzi-decor">
+        <svg viewBox="0 0 100 100">
+            <path d="M50 5 L90 40 L70 90 L30 90 L10 40 Z" fill="#4CAF50"/> <!-- 粽葉 -->
+            <path d="M10 40 L50 5 L70 90 L30 90 Z" fill="#388E3C"/> <!-- 陰影面 -->
+            <path d="M30 45 L70 45 M40 60 L80 50 M20 50 L60 60" stroke="#CDC0B0" stroke-width="2"/> <!-- 繩子 -->
+            <path d="M50 5 L50 0 M48 0 H52" stroke="#CDC0B0" stroke-width="2"/> <!-- 掛繩 -->
+        </svg>
+    </div>
+    <!-- 裝飾彩蛋：燈謎燈籠 -->
+    <div class="decoration riddle-decor">
+        <svg viewBox="0 0 60 120">
+            <rect x="10" y="10" width="40" height="50" rx="5" fill="#E91E63"/>
+            <rect x="15" y="5" width="30" height="5" fill="#C2185B"/>
+            <rect x="15" y="60" width="30" height="5" fill="#C2185B"/>
+            <line x1="30" y1="0" x2="30" y2="5" stroke="#FFD54F" stroke-width="2"/>
+            <!-- 謎題紙 -->
+            <rect x="20" y="65" width="20" height="40" fill="#FFF9C4"/>
+            <line x1="25" y1="75" x2="35" y2="75" stroke="#333" stroke-width="1"/>
+            <line x1="25" y1="85" x2="35" y2="85" stroke="#333" stroke-width="1"/>
+        </svg>
+    </div>
+
+    <main class="main-screen">
+        <h1 class="main-title">元宵快樂</h1>
+
+        <div class="tangyuan-wrapper" id="triggerGift" role="button" aria-label="吃湯圓">
+            <!-- SVG 湯圓 -->
+            <svg class="tangyuan-svg" viewBox="0 0 200 200">
+                <defs>
+                    <radialGradient id="bowlGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                        <stop offset="0%" style="stop-color:#E3F2FD;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#90CAF9;stop-opacity:1" />
+                    </radialGradient>
+                    <filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000" flood-opacity="0.3"/></filter>
+                </defs>
+                <g filter="url(#shadow)">
+                    <!-- 碗 -->
+                    <path d="M20 100 Q20 180 100 180 Q180 180 180 100 Z" fill="url(#bowlGradient)"/>
+                    <path d="M20 100 Q100 130 180 100 Q100 70 20 100 Z" fill="#BBDEFB"/> <!-- 碗口/湯面 -->
+                    <!-- 青花紋飾 -->
+                    <path d="M30 110 Q50 130 70 110 M130 110 Q150 130 170 110" stroke="#1565C0" stroke-width="3" fill="none"/>
+                </g>
+                <!-- 湯圓 -->
+                <circle cx="70" cy="105" r="25" fill="#F5F5F5"/> <circle cx="110" cy="115" r="25" fill="#F5F5F5"/> <circle cx="140" cy="95" r="25" fill="#F5F5F5"/>
+                <!-- 熱氣 -->
+                <g class="steam-group" style="animation-delay: 0s;"><path d="M60 70 Q70 50 60 30" stroke="#FFF" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/></g>
+                <g class="steam-group" style="animation-delay: 0.7s;"><path d="M100 60 Q110 40 100 20" stroke="#FFF" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/></g>
+                <g class="steam-group" style="animation-delay: 1.4s;"><path d="M140 50 Q150 30 140 10" stroke="#FFF" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/></g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 點擊湯圓，品嚐團圓的甜蜜 ↓</p>
+        <button class="open-button" id="triggerBtn">團圓</button>
+    </main>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <!-- 主 Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">元宵絮語</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>月圓人團圓，燈火映笑顏。<br>這一碗甜甜的湯圓，<br>包著我們滿滿的幸福回憶。<br>元宵節快樂！🌕</p></div>
+            
+            <!-- 兌換圖示：兔子燈 -->
+            <div class="prize-trigger" id="prizeTrigger">
+                <svg viewBox="0 0 100 100">
+                    <ellipse cx="50" cy="60" rx="35" ry="25" fill="#FFF"/> <!-- 身體 -->
+                    <ellipse cx="35" cy="35" rx="8" ry="20" fill="#FFF" transform="rotate(-20 35 35)"/> <!-- 左耳 -->
+                    <ellipse cx="65" cy="35" rx="8" ry="20" fill="#FFF" transform="rotate(20 65 35)"/> <!-- 右耳 -->
+                    <circle cx="40" cy="55" r="3" fill="#E91E63"/> <!-- 左眼 -->
+                    <circle cx="60" cy="55" r="3" fill="#E91E63"/> <!-- 右眼 -->
+                    <ellipse cx="50" cy="60" rx="5" ry="3" fill="#FFCDD2"/> <!-- 腮紅/鼻子 -->
+                    <!-- 燈籠輪子和提桿 -->
+                    <circle cx="30" cy="85" r="8" fill="#8D6E63"/> <circle cx="70" cy="85" r="8" fill="#8D6E63"/>
+                    <line x1="50" y1="35" x2="50" y2="10" stroke="#FFD54F" stroke-width="3"/>
+                    <circle cx="50" cy="10" r="3" fill="#FFD54F"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 兌換 Modal -->
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal-content prize-modal-content">
+            <button class="close-btn" id="closePrizeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title" style="color: var(--primary-color);">燈謎好禮</h2>
+            <!-- TODO: 換成你的 QR Code -->
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=LanternPrize" alt="兌換憑證" class="prize-qr-code">
+            <p class="prize-text">猜對燈謎了嗎？<br>憑此兌換<strong>「元宵小驚喜」</strong>！</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryItems = [
+                { src: "https://picsum.photos/id/106/800/600", caption: "去年一起賞的花燈，真美。" },
+                { src: "https://picsum.photos/id/366/800/600", caption: "你親手煮的湯圓，最甜！"},
+                { src: "https://picsum.photos/id/400/800/600", caption: "今年的月亮，和你一樣圓滿。" },
+            ];
+
+            const giftWrapper = document.getElementById('triggerGift'), openBtn = document.getElementById('triggerBtn'), modal = document.getElementById('modal'), closeBtn = document.getElementById('closeBtn'), lanternBgContainer = document.getElementById('lantern-bg-container'), slidesWrapper = document.getElementById('slidesWrapper'), captionEl = document.getElementById('caption'), prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), prizeTrigger = document.getElementById('prizeTrigger'), prizeModal = document.getElementById('prizeModal'), closePrizeBtn = document.getElementById('closePrizeBtn');
+            let currentSlide = 0;
+
+            function setupSlider() { slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="元宵照片"></div>`).join(''); showSlide(0); }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+            function openModal() { modal.classList.add('active'); showSlide(0); if (navigator.vibrate) navigator.vibrate(50); }
+            function closeModal() { modal.classList.remove('active'); }
+            function openPrizeModal() { prizeModal.classList.add('active'); }
+            function closePrizeModal() { prizeModal.classList.remove('active'); }
+
+            // 背景花燈生成
+            const lanternSvgs = [
+                '<svg viewBox="0 0 50 60" width="50" height="60"><rect x="10" y="10" width="30" height="40" rx="5" fill="#FF5252"/><line x1="25" y1="0" x2="25" y2="10" stroke="#FFD740" stroke-width="2"/><rect x="15" y="50" width="20" height="5" fill="#D32F2F"/></svg>', // 紅長
+                '<svg viewBox="0 0 50 50" width="50" height="50"><circle cx="25" cy="30" r="20" fill="#FF9800"/><line x1="25" y1="0" x2="25" y2="10" stroke="#FFD740" stroke-width="2"/></svg>', // 橘圓
+                '<svg viewBox="0 0 50 60" width="50" height="60"><polygon points="25,10 5,30 25,50 45,30" fill="#E040FB"/><line x1="25" y1="0" x2="25" y2="10" stroke="#FFD740" stroke-width="2"/></svg>' // 紫菱
+            ];
+            function createBgLantern() {
+                const lantern = document.createElement('div');
+                lantern.classList.add('bg-lantern');
+                lantern.innerHTML = lanternSvgs[Math.floor(Math.random() * lanternSvgs.length)];
+                lantern.style.left = Math.random() * 95 + 'vw';
+                const duration = Math.random() * 15 + 15; // 15-30s 慢慢升
+                lantern.style.animationDuration = `${duration}s`;
+                const scale = Math.random() * 0.5 + 0.5;
+                lantern.style.transform = `scale(${scale})`;
+                lantern.style.opacity = Math.random() * 0.5 + 0.3;
+                lanternBgContainer.appendChild(lantern);
+                setTimeout(() => lantern.remove(), duration * 1000);
+            }
+
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            prizeTrigger.addEventListener('click', openPrizeModal);
+            closePrizeBtn.addEventListener('click', closePrizeModal);
+            prizeModal.addEventListener('click', (e) => { if (e.target === prizeModal) closePrizeModal(); });
+
+            setupSlider();
+            // 初始產生一些
+            for(let i=0; i<8; i++) { setTimeout(createBgLantern, i * 500); }
+            setInterval(createBgLantern, 2000);
+        });
+    </script>
+</body>
+</html>

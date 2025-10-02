@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Valentine's Day</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (情人節風格) --- */
+        :root {
+            --bg-color: #F8E8EE; /* 淺粉背景 */
+            --primary-color: #C38D9E; /* 灰粉色 */
+            --secondary-color: #E8A87C; /* 暖橙色點綴 */
+            --accent-color: #DAA520; /* 金色 */
+            --text-color: #4A4A4A;
+            --modal-bg: #FFFDF9;
+            --font-title: 'Dancing Script', cursive;
+            --font-body: 'Noto Serif TC', serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: radial-gradient(circle, #fff0f5, var(--bg-color));
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景動畫容器 (玫瑰花瓣) --- */
+        #petal-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .petal {
+            position: absolute; top: -50px;
+            color: var(--primary-color);
+            opacity: 0.6;
+            animation: fall-and-sway linear forwards;
+        }
+
+        /* --- 主畫面 --- */
+        .main-screen { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; padding: 20px; text-align: center; }
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 4.5rem;
+            color: var(--primary-color);
+            text-shadow: 1px 1px 2px #fff;
+            margin-bottom: 30px;
+            animation: fadeIn 2s ease-out;
+        }
+
+        /* --- 信封互動區 --- */
+        .envelope-wrapper { cursor: pointer; width: 250px; height: 250px; margin-bottom: 20px; position: relative; transition: transform 0.2s ease; -webkit-tap-highlight-color: transparent; }
+        .envelope-wrapper:hover { transform: scale(1.05); }
+        .envelope-wrapper:active { transform: scale(0.98); }
+        .envelope-svg { width: 100%; height: 100%; overflow: visible; }
+        .envelope-flap {
+            transform-origin: top center;
+            animation: gentle-lift 3s infinite ease-in-out;
+        }
+
+        .instruction-text { font-size: 1.1rem; color: #aaa; margin-bottom: 20px; font-family: var(--font-body); }
+        .open-button {
+            background: var(--primary-color); color: white;
+            border: none; padding: 15px 40px; font-size: 1.3rem;
+            border-radius: 50px; font-family: var(--font-body);
+            font-weight: bold; letter-spacing: 3px; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(195, 141, 158, 0.4);
+            transition: all 0.2s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(195, 141, 158, 0.5); }
+        .open-button:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(195, 141, 158, 0.4); }
+        
+        .page-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: #ddd; z-index: 5; }
+
+        /* --- 開啟特效 (愛心綻放) --- */
+        #heart-burst-effect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; display: flex; justify-content: center; align-items: center; opacity: 0; }
+        #heart-burst-effect.active { opacity: 1; }
+        .flying-heart { font-size: 50px; color: var(--primary-color); animation: heart-fly-out 0.8s ease-out forwards; }
+        
+        /* --- 主 Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(248, 232, 238, 0.7); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.5s 0.3s, visibility 0.5s 0.3s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); color: var(--text-color);
+            border: 1px solid #eee;
+            width: 100%; max-width: 400px; border-radius: 8px;
+            padding: 40px 25px 30px; position: relative; text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transform: scale(0.95); transition: transform 0.5s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 2rem; color: #ccc; background: none; border: none; cursor: pointer; line-height: 1; padding: 5px; z-index: 10; transition: color 0.2s; }
+        .close-btn:hover { color: var(--primary-color); }
+        .modal-title { font-family: var(--font-title); color: var(--primary-color); font-size: 3rem; margin-bottom: 20px; }
+        /* 圖片輪播 */
+        .slider-container { border-radius: 4px; border: 1px solid #f0e0e6; }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 20px; position: relative; background-color: #fff; }
+        .slides-wrapper { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav { background-color: rgba(255, 255, 255, 0.7); color: #333; position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .slider-nav:hover { background-color: white; }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        .caption-container { font-size: 1.1rem; color: #C38D9E; font-style: italic; min-height: 2.4em; line-height: 1.4; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.8; color: #555; white-space: pre-line; }
+
+        /* --- 兌換獎品火漆蠟印 --- */
+        .prize-trigger { position: absolute; bottom: 20px; right: 20px; width: 60px; height: 60px; cursor: pointer; z-index: 15; transition: transform 0.2s; }
+        .prize-trigger:hover { transform: scale(1.1) rotate(-10deg); }
+        .prize-trigger svg { filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.2)); animation: pulse 2s infinite ease-in-out; }
+
+        /* --- 兌換獎品 Modal --- */
+        #prize-modal-overlay { z-index: 200; background-color: rgba(0,0,0,0.8); }
+        .prize-modal-content { padding: 40px 30px; border: none; background: #fff; }
+        .prize-qr-code { width: 100%; max-width: 200px; height: auto; border: 1px solid #ddd; padding: 5px; margin-bottom: 20px; }
+        .prize-text { font-size: 1.1rem; color: #333; line-height: 1.6; }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes fall-and-sway { to { transform: translateY(100vh) rotate(calc(var(--rot) * 360deg)); opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes gentle-lift { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+        @keyframes heart-fly-out { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(20); opacity: 0; } }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+        @media (max-width: 600px) { .main-title { font-size: 3.5rem; } .envelope-wrapper { width: 220px; height: 220px; } }
+    </style>
+</head>
+<body>
+
+    <div id="petal-container"></div>
+    <div id="heart-burst-effect"><div class="flying-heart">❤</div></div>
+
+    <main class="main-screen">
+        <h1 class="main-title">Happy Valentine's Day</h1>
+
+        <div class="envelope-wrapper" id="triggerGift" role="button" aria-label="打開情書">
+            <svg class="envelope-svg" viewBox="0 0 200 200">
+                <defs><filter id="item-shadow"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000" flood-opacity="0.1"/></filter></defs>
+                <g class="envelope-group" filter="url(#item-shadow)">
+                    <!-- 信封背面 -->
+                    <rect x="20" y="60" width="160" height="110" fill="#FFFDF9" rx="5"/>
+                    <!-- 信封左右摺頁 -->
+                    <path d="M20 60 L100 115 L20 170 Z" fill="#F8F2F4"/>
+                    <path d="M180 60 L100 115 L180 170 Z" fill="#F8F2F4"/>
+                    <!-- 信封上蓋 (可動) -->
+                    <g class="envelope-flap">
+                        <path d="M20 60 L100 115 L180 60 Z" fill="#FFFDF9"/>
+                        <!-- 火漆蠟印 -->
+                        <circle cx="100" cy="110" r="18" fill="#C38D9E"/>
+                        <text x="100" y="118" font-size="18" fill="white" text-anchor="middle" font-family="Dancing Script, cursive">L</text>
+                    </g>
+                </g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 點擊情書，開啟我們的故事 ↓</p>
+        <button class="open-button" id="triggerBtn">開啟</button>
+    </main>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <!-- 主 Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">For You, My Love</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>親愛的，<br><br>這封信裡裝滿了我們的點點滴滴，<br>每一張照片，都是我珍藏的記憶。<br>願未來的每一天，都與你共度。<br>情人節快樂！💕</p></div>
+            
+            <!-- 兌換獎品火漆蠟印 -->
+            <div class="prize-trigger" id="prizeTrigger">
+                <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#C38D9E"/><text x="50" y="68" font-size="50" fill="white" text-anchor="middle" font-family="Dancing Script, cursive">L</text></svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 兌換獎品 Modal -->
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal-content prize-modal-content">
+            <button class="close-btn" id="closePrizeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">一份特別承諾</h2>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=ValentinesDayDinner" alt="兌換憑證" class="prize-qr-code">
+            <p class="prize-text">憑此畫面可兌換<br><strong>「一頓浪漫的燭光晚餐」</strong><br>由我為你準備！</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryItems = [
+                { src: "https://picsum.photos/id/1011/800/600", caption: "我們的第一次旅行，陽光正好。" },
+                { src: "https://picsum.photos/id/1027/800/600", caption: "平凡日子裡，因為有你而閃亮。"},
+                { src: "https://picsum.photos/id/1040/800/600", caption: "期待與你共度的下一個情人節。" },
+            ];
+
+            const giftWrapper = document.getElementById('triggerGift'), openBtn = document.getElementById('triggerBtn'), modal = document.getElementById('modal'), closeBtn = document.getElementById('closeBtn'), petalContainer = document.getElementById('petal-container'), heartBurst = document.getElementById('heart-burst-effect'), slidesWrapper = document.getElementById('slidesWrapper'), captionEl = document.getElementById('caption'), prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), prizeTrigger = document.getElementById('prizeTrigger'), prizeModal = document.getElementById('prizeModal'), closePrizeBtn = document.getElementById('closePrizeBtn');
+            let currentSlide = 0;
+
+            function setupSlider() { slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="情人節照片"></div>`).join(''); showSlide(0); }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+            function openModal() {
+                triggerHeartBurst();
+                setTimeout(() => { modal.classList.add('active'); showSlide(0); }, 300);
+            }
+            function closeModal() { modal.classList.remove('active'); }
+            function openPrizeModal() { prizeModal.classList.add('active'); }
+            function closePrizeModal() { prizeModal.classList.remove('active'); }
+
+            function createPetal() {
+                const petal = document.createElement('div');
+                petal.classList.add('petal');
+                petal.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+                petal.style.left = Math.random() * 100 + 'vw';
+                const duration = Math.random() * 8 + 7; // 7-15s
+                petal.style.animationDuration = `${duration}s`;
+                petal.style.setProperty('--rot', Math.random() * 2 - 1); // for rotation
+                const scale = Math.random() * 0.5 + 0.5;
+                petal.style.transform = `scale(${scale})`;
+                petalContainer.appendChild(petal);
+                setTimeout(() => petal.remove(), duration * 1000);
+            }
+
+            function triggerHeartBurst() {
+                heartBurst.classList.add('active');
+                setTimeout(() => {
+                    heartBurst.classList.remove('active');
+                }, 800);
+            }
+
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            prizeTrigger.addEventListener('click', openPrizeModal);
+            closePrizeBtn.addEventListener('click', closePrizeModal);
+            prizeModal.addEventListener('click', (e) => { if (e.target === prizeModal) closePrizeModal(); });
+
+            setupSlider();
+            setInterval(createPetal, 600);
+        });
+    </script>
+</body>
+</html>

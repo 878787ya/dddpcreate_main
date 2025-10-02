@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Halloween!</title>
+    
+    <!-- 引入 Google Fonts: Creepster, Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (萬聖節風格) --- */
+        :root {
+            --bg-color: #1a1a1a;
+            --primary-color: #FF7518; /* 南瓜橘 */
+            --secondary-color: #4B0082; /* 靛紫 */
+            --accent-color: #9E9E9E; /* 灰色 (鐵鍊) */
+            --text-color: #E0E0E0;
+            --modal-bg: #212121;
+            --font-title: 'Creepster', cursive;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: radial-gradient(ellipse at bottom, #2c1a3b, var(--bg-color));
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景動畫容器 (鬼魂、蝙蝠) --- */
+        #spooky-bg-container {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .ghost {
+            position: absolute; bottom: -100px;
+            font-size: 50px; color: white;
+            opacity: 0.3;
+            animation: floatAndFade linear forwards;
+        }
+        .bat {
+            position: absolute; color: black; opacity: 0.6;
+            animation: flyAcross linear forwards;
+            font-size: 30px;
+        }
+
+        /* --- 蜘蛛網裝飾 --- */
+        .spider-web {
+            position: absolute; width: 150px; opacity: 0.2;
+            pointer-events: none; z-index: 5;
+        }
+        .web-top-right { top: 0; right: 0; }
+        .web-top-left { top: 0; left: 0; transform: scaleX(-1); }
+
+        /* --- 主畫面 --- */
+        .main-screen {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100dvh; padding: 20px; text-align: center;
+        }
+
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 5rem;
+            color: var(--primary-color);
+            text-shadow: 2px 2px 0px #000, 0 0 20px var(--secondary-color);
+            margin-bottom: 30px;
+            animation: flicker 2s infinite alternate;
+        }
+
+        /* --- 詭異寶箱互動區 --- */
+        .chest-wrapper {
+            cursor: pointer;
+            width: 220px; height: 220px;
+            margin-bottom: 30px; position: relative;
+            transition: transform 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .chest-wrapper:hover { transform: scale(1.05); }
+        .chest-wrapper:active { transform: scale(0.98); }
+        .chest-svg { width: 100%; height: 100%; overflow: visible; }
+        .chest-lid-group {
+            transform-origin: 50% 110px;
+            animation: heavyWobble 4s infinite ease-in-out;
+        }
+
+        .instruction-text { font-size: 1rem; color: #aaa; margin-bottom: 15px; }
+
+        .open-button {
+            background-color: var(--primary-color); color: black;
+            border: 2px solid black; padding: 15px 40px; font-size: 1.5rem;
+            border-radius: 5px; font-family: var(--font-title);
+            letter-spacing: 2px; cursor: pointer;
+            box-shadow: 0 5px 0px #A04000, 0 8px 15px rgba(0,0,0,0.5);
+            transition: all 0.1s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { transform: translateY(-2px); box-shadow: 0 7px 0px #A04000, 0 10px 20px rgba(0,0,0,0.5); }
+        .open-button:active { transform: translateY(4px); box-shadow: 0 1px 0px #A04000, 0 2px 5px rgba(0,0,0,0.5); }
+
+        /* --- 驚嚇南瓜 --- */
+        .pumpkin-surprise {
+            position: absolute;
+            bottom: 20px; left: 20px;
+            width: 80px; height: 80px;
+            cursor: pointer; z-index: 10;
+            transition: transform 0.2s;
+            animation: pumpkinGlow 3s infinite ease-in-out;
+        }
+        .pumpkin-surprise:hover { transform: scale(1.1); }
+
+        /* --- Footer --- */
+        .page-footer {
+            position: absolute; bottom: 15px; width: 100%;
+            text-align: center; font-size: 0.8rem; color: #444;
+            z-index: 5;
+        }
+
+        /* --- 主 Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(15, 15, 15, 0.8); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg);
+            border: 3px solid var(--primary-color);
+            width: 100%; max-width: 400px; border-radius: 8px;
+            padding: 30px 25px; position: relative; text-align: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+            transform: scale(0.9); transition: transform 0.4s ease;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-btn {
+            position: absolute; top: 10px; right: 15px; font-size: 2.2rem;
+            color: #555; background: none; border: none;
+            cursor: pointer; line-height: 1; padding: 5px; z-index: 10;
+            transition: color 0.2s;
+        }
+        .close-btn:hover { color: var(--primary-color); }
+        .modal-title {
+            font-family: var(--font-title); color: var(--primary-color);
+            font-size: 3rem; margin-bottom: 20px; letter-spacing: 1px;
+        }
+        /* 圖片輪播 */
+        .slider-container { border-radius: 4px; border: 2px solid #333; }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 15px; position: relative; background-color: #111; }
+        .slides-wrapper { display: flex; transition: transform 0.4s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav {
+            background-color: rgba(255, 117, 24, 0.5); color: black;
+            /* 其他樣式保持 */
+            position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+        }
+        .slider-nav:hover { background-color: rgba(255, 117, 24, 0.9); }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        .caption-container { font-size: 1rem; color: #888; min-height: 2.4em; line-height: 1.2; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.6; color: #ccc; white-space: pre-line; }
+
+        /* --- 驚嚇 Modal --- */
+        .jumpscare-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 200;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: opacity 0.1s, visibility 0.1s;
+        }
+        .jumpscare-modal.active { opacity: 1; visibility: visible; }
+        .jumpscare-modal img {
+            max-width: 100%; max-height: 100%;
+            object-fit: contain;
+            animation: jumpscare-pop 0.2s ease-out forwards;
+            transform: scale(0.5); opacity: 0;
+        }
+        .jumpscare-modal.active img { animation-play-state: running; }
+
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes heavyWobble { 0%{transform:rotate(0)} 20%{transform:rotate(-1deg)} 40%{transform:rotate(1deg)} 60%{transform:rotate(-0.5deg)} 80%{transform:rotate(0)} 100%{transform:rotate(0)} }
+        @keyframes floatAndFade { to { transform: translateY(-120vh) translateX(50px) rotate(20deg); opacity: 0; } }
+        @keyframes flyAcross { from { transform: translateX(-100px); } to { transform: translateX(110vw); } }
+        @keyframes flicker { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        @keyframes pumpkinGlow { 0%, 100% { filter: drop-shadow(0 0 5px var(--primary-color)); } 50% { filter: drop-shadow(0 0 20px var(--primary-color)); } }
+        @keyframes jumpscare-pop { to { transform: scale(1); opacity: 1; } }
+
+        @media (max-width: 600px) {
+            .main-title { font-size: 3.5rem; }
+            .chest-wrapper { width: 180px; height: 180px; }
+            .pumpkin-surprise { width: 60px; height: 60px; bottom: 10px; left: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="spooky-bg-container"></div>
+    <svg class="spider-web web-top-right" viewBox="0 0 100 100"><path d="M50 0 V100 M0 50 H100 M15 15 L85 85 M15 85 L85 15 M50 0 A50 50 0 0 1 100 50 M50 0 A50 50 0 0 0 0 50 M100 50 A50 50 0 0 1 50 100 M0 50 A50 50 0 0 1 50 100" stroke="#fff" stroke-width="0.5" fill="none"/></svg>
+    <svg class="spider-web web-top-left" viewBox="0 0 100 100"><path d="M50 0 V100 M0 50 H100 M15 15 L85 85 M15 85 L85 15 M50 0 A50 50 0 0 1 100 50 M50 0 A50 50 0 0 0 0 50 M100 50 A50 50 0 0 1 50 100 M0 50 A50 50 0 0 1 50 100" stroke="#fff" stroke-width="0.5" fill="none"/></svg>
+
+    <main class="main-screen">
+        <h1 class="main-title">Trick Or Treat</h1>
+
+        <div class="chest-wrapper" id="triggerChest" role="button" aria-label="打開寶箱">
+            <!-- SVG 詭異寶箱 -->
+            <svg class="chest-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <g class="chest-body">
+                    <rect x="30" y="100" width="140" height="80" fill="#3E2723" rx="5"/>
+                    <rect x="25" y="110" width="150" height="10" fill="#9E9E9E"/>
+                    <rect x="25" y="140" width="150" height="10" fill="#9E9E9E"/>
+                </g>
+                <g class="chest-lid-group">
+                    <rect x="25" y="70" width="150" height="40" fill="#5D4037" rx="5"/>
+                    <rect x="25" y="85" width="150" height="10" fill="#9E9E9E"/>
+                    <!-- 骷髏鎖 -->
+                    <path d="M90,100 a10,10 0 1,1 20,0 v10 h-20 z" fill="#E0E0E0"/>
+                    <circle cx="97" cy="105" r="2" fill="black"/>
+                    <circle cx="103" cy="105" r="2" fill="black"/>
+                </g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 敢打開嗎...? ↓</p>
+        <button class="open-button" id="triggerBtn">OPEN</button>
+    </main>
+
+    <!-- 驚嚇南瓜 -->
+    <div class="pumpkin-surprise" id="pumpkinSurprise" role="button" aria-label="一個驚喜">
+        <svg viewBox="0 0 100 100"><path d="M85 40 C100 60 100 80 85 95 C70 105 30 105 15 95 C0 80 0 60 15 40 C30 20 70 20 85 40" fill="#FF7518"/><path d="M40 0 L50 20 L60 0 Z" fill="#654321"/><path d="M30 60 L40 50 L50 60 Z M50 60 L60 50 L70 60 Z" fill="black"/><path d="M30 80 Q50 70 70 80 Q50 90 30 80" fill="black"/></svg>
+    </div>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <!-- 主要禮物 Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">My Treat For You</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>沒有搗蛋，只有給你的糖！<br><br>這是我為你準備的專屬回憶，<br>希望你喜歡這個驚喜！<br>萬聖節快樂！🎃</p></div>
+        </div>
+    </div>
+    
+    <!-- 驚嚇 Jumpscare Modal -->
+    <div class="jumpscare-modal" id="jumpscareModal">
+        <!-- TODO: 將此處換成你的嚇人圖片！ -->
+        <img src="https://i.ytimg.com/vi/szg_s4hQ_pA/maxresdefault.jpg" alt="BOO!" id="jumpscareImage">
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 資料區 ---
+            // TODO: 修改你的照片和註解
+            const galleryItems = [
+                { src: "https://picsum.photos/id/1077/800/600", caption: "我們的萬聖節冒險開始！" },
+                { src: "https://picsum.photos/id/379/800/600", caption: "找到了一些神秘的寶藏..."},
+                { src: "https://picsum.photos/id/431/800/600", caption: "但最棒的還是和你在一起的時光。" },
+            ];
+
+            // --- 元素選取 ---
+            const chestWrapper = document.getElementById('triggerChest');
+            const openBtn = document.getElementById('triggerBtn');
+            const modal = document.getElementById('modal');
+            const closeBtn = document.getElementById('closeBtn');
+            const spookyContainer = document.getElementById('spooky-bg-container');
+            const slidesWrapper = document.getElementById('slidesWrapper');
+            const captionEl = document.getElementById('caption');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            let currentSlide = 0;
+
+            const pumpkin = document.getElementById('pumpkinSurprise');
+            const jumpscareModal = document.getElementById('jumpscareModal');
+
+            // --- 主 Modal 輪播功能 ---
+            function setupSlider() {
+                slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="萬聖節照片"></div>`).join('');
+                showSlide(0);
+            }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+
+            function openModal() { modal.classList.add('active'); showSlide(0); }
+            function closeModal() { modal.classList.remove('active'); }
+
+            // --- 驚嚇 Modal 功能 ---
+            function openJumpscare() {
+                jumpscareModal.classList.add('active');
+                if (navigator.vibrate) navigator.vibrate(200); // 震一下更有感
+            }
+            function closeJumpscare() { jumpscareModal.classList.remove('active'); }
+
+            // --- 背景動畫 ---
+            function createGhost() {
+                const ghost = document.createElement('div');
+                ghost.classList.add('ghost');
+                ghost.innerText = '👻';
+                ghost.style.left = Math.random() * 80 + 'vw';
+                const duration = Math.random() * 8 + 6; // 6-14s
+                ghost.style.animationDuration = `${duration}s`;
+                ghost.style.transform = `scale(${Math.random() * 0.5 + 0.8})`;
+                spookyContainer.appendChild(ghost);
+                setTimeout(() => ghost.remove(), duration * 1000);
+            }
+            function createBat() {
+                const bat = document.createElement('div');
+                bat.classList.add('bat');
+                bat.innerText = '🦇';
+                bat.style.top = Math.random() * 40 + 'vh'; // 上半部
+                const duration = Math.random() * 4 + 3; // 3-7s
+                bat.style.animationDuration = `${duration}s`;
+                spookyContainer.appendChild(bat);
+                setTimeout(() => bat.remove(), duration * 1000);
+            }
+
+            // --- 事件監聽 ---
+            chestWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            
+            pumpkin.addEventListener('click', openJumpscare);
+            jumpscareModal.addEventListener('click', closeJumpscare); // 點擊嚇人圖片也會關閉
+
+            // --- 頁面啟動 ---
+            setupSlider();
+            setInterval(createGhost, 1500);
+            setInterval(createBat, 8000); // 蝙蝠比較稀有
+        });
+    </script>
+</body>
+</html>

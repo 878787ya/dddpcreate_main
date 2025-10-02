@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>教師節快樂!</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (教師節風格) --- */
+        :root {
+            --bg-color: #FDF6E3; /* 溫暖米黃色 */
+            --primary-color: #587D71; /* 帶灰調的綠色 */
+            --secondary-color: #B5838D; /* 溫柔的粉紅色 */
+            --accent-color: #DAA520; /* 金色流蘇 */
+            --text-color: #4A4A4A;
+            --modal-bg: #FAF3E0;
+            --font-title: 'Noto Serif TC', serif;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: radial-gradient(circle, #faf6eb, var(--bg-color));
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景動畫容器 (知識符號) --- */
+        #knowledge-symbols-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .symbol {
+            position: absolute; bottom: -50px;
+            font-size: 24px; color: var(--primary-color);
+            opacity: 0.3;
+            animation: floatUpAndFade linear forwards;
+        }
+
+        /* --- 主畫面 --- */
+        .main-screen { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; padding: 20px; text-align: center; }
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 5rem;
+            color: var(--primary-color);
+            text-shadow: 2px 2px 0px #fff;
+            margin-bottom: 30px;
+            animation: fadeInDown 1.5s ease-out;
+        }
+
+        /* --- 學士帽互動區 --- */
+        .cap-wrapper { cursor: pointer; width: 220px; height: 220px; margin-bottom: 20px; position: relative; transition: transform 0.2s ease; -webkit-tap-highlight-color: transparent; }
+        .cap-wrapper:hover { transform: scale(1.05); }
+        .cap-wrapper:active { transform: scale(0.98); }
+        .cap-svg { width: 100%; height: 100%; overflow: visible; }
+        .cap-group {
+            transform-origin: bottom center;
+            animation: gentle-sway 4s infinite ease-in-out;
+        }
+
+        .instruction-text { font-size: 1.1rem; color: #8C7A6B; margin-bottom: 20px; font-family: var(--font-title); }
+        .open-button {
+            background-color: var(--primary-color); color: white;
+            border: none; padding: 15px 40px; font-size: 1.3rem;
+            border-radius: 8px; font-family: var(--font-title);
+            letter-spacing: 5px; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.2s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        .open-button:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .page-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: #ccc; z-index: 5; }
+
+        /* --- 開啟特效 (智慧之光) --- */
+        #wisdom-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; opacity: 0; background: radial-gradient(circle, rgba(255,215,0,0.7) 0%, rgba(255,215,0,0) 70%); transform: scale(0); transition: all 0.6s ease-out; }
+        #wisdom-glow.active { opacity: 1; transform: scale(1.5); }
+
+        /* --- 主 Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(88, 125, 113, 0.8); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.4s 0.2s, visibility 0.4s 0.2s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); color: var(--text-color);
+            border: 1px solid #ddd;
+            width: 100%; max-width: 400px; border-radius: 8px;
+            padding: 40px 25px 30px; position: relative; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateY(20px); transition: transform 0.4s 0.2s ease-out;
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 2rem; color: #aaa; background: none; border: none; cursor: pointer; line-height: 1; padding: 5px; z-index: 10; transition: color 0.2s; }
+        .close-btn:hover { color: var(--secondary-color); }
+        .modal-title { font-family: var(--font-title); color: var(--primary-color); font-size: 2.8rem; margin-bottom: 20px; }
+        /* 圖片輪播 */
+        .slider-container { border-radius: 4px; border: 1px solid #eee; }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 20px; position: relative; background-color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .slides-wrapper { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav { background-color: rgba(255, 255, 255, 0.7); color: #333; position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .slider-nav:hover { background-color: white; }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        .caption-container { font-size: 1.1rem; color: #587D71; font-family: var(--font-title); min-height: 2.4em; line-height: 1.4; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.8; color: #555; white-space: pre-line; font-family: var(--font-title);}
+
+        /* --- 兌換獎品博士帽 --- */
+        .prize-trigger { position: absolute; bottom: 20px; right: 20px; width: 70px; height: 70px; cursor: pointer; z-index: 15; transition: transform 0.2s; }
+        .prize-trigger:hover { transform: scale(1.1) rotate(5deg); }
+        .prize-trigger svg { filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.2)); }
+
+        /* --- 兌換獎品 Modal --- */
+        #prize-modal-overlay { z-index: 200; background-color: rgba(0,0,0,0.8); }
+        .prize-modal-content { padding: 40px 30px; border: none; background: #fff; }
+        .prize-qr-code { width: 100%; max-width: 200px; height: auto; border: 1px solid #ddd; padding: 5px; margin-bottom: 20px; }
+        .prize-text { font-size: 1.1rem; color: #333; font-family: var(--font-title); line-height: 1.6; }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes floatUpAndFade { to { transform: translateY(-100vh) rotate(90deg); opacity: 0; } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes gentle-sway { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-3deg)} 75%{transform:rotate(3deg)} }
+
+        @media (max-width: 600px) { .main-title { font-size: 3.5rem; } .cap-wrapper { width: 180px; height: 180px; } }
+    </style>
+</head>
+<body>
+
+    <div id="knowledge-symbols-container"></div>
+    <div id="wisdom-glow"></div>
+
+    <main class="main-screen">
+        <h1 class="main-title">教師節快樂</h1>
+
+        <div class="cap-wrapper" id="triggerGift" role="button" aria-label="獻上敬意">
+            <svg class="cap-svg" viewBox="0 0 200 200">
+                <defs><filter id="item-shadow"><feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000" flood-opacity="0.2"/></filter></defs>
+                <g class="cap-group" filter="url(#item-shadow)">
+                    <!-- 帽子主體 -->
+                    <path d="M10 80 L100 40 L190 80 L100 120 Z" fill="#3A3A3A"/>
+                    <path d="M50 110 Q100 140 150 110 V95 H50 Z" fill="#4A4A4A"/>
+                    <!-- 流蘇 -->
+                    <circle cx="100" cy="80" r="6" fill="#2A2A2A"/>
+                    <path d="M100 80 C 130 90, 140 120, 150 150" stroke="var(--accent-color)" stroke-width="4" fill="none" stroke-linecap="round"/>
+                </g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 點擊學士帽，獻上我們的祝福與感謝 ↓</p>
+        <button class="open-button" id="triggerBtn">開啟感謝</button>
+    </main>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <!-- 主 Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">春風化雨</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>老師，謝謝您，<br>用知識的活水，灌溉我們的心田；<br>用溫暖的粉筆，書寫我們的未來。<br>願您永遠健康快樂！<br>教師節快樂！</p></div>
+            
+            <!-- 兌換獎品博士帽 -->
+            <div class="prize-trigger" id="prizeTrigger">
+                <svg viewBox="0 0 100 100"><path d="M10 40 L50 60 L90 40 L50 20 Z" fill="#333"/><rect x="5" y="55" width="90" height="10" fill="#333"/><path d="M70 20 V55 M75 20 H85 V30" stroke="#FFD700" stroke-width="4" fill="none"/></svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 兌換獎品 Modal -->
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal-content prize-modal-content">
+            <button class="close-btn" id="closePrizeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">師恩感謝券</h2>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TeachersDayCoffeeCoupon" alt="兌換憑證" class="prize-qr-code">
+            <p class="prize-text">憑此畫面可兌換<br><strong>「一杯暖心咖啡」</strong><br>老師，您辛苦了！</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryItems = [
+                { src: "https://picsum.photos/id/23/800/600", caption: "畢業典禮那天，我們與您的合照。" },
+                { src: "https://picsum.photos/id/19/800/600", caption: "忘不了您在課堂上專注的神情。"},
+                { src: "https://picsum.photos/id/24/800/600", caption: "因為有您，我們才能看得更遠。" },
+            ];
+
+            const giftWrapper = document.getElementById('triggerGift'), openBtn = document.getElementById('triggerBtn'), modal = document.getElementById('modal'), closeBtn = document.getElementById('closeBtn'), symbolsContainer = document.getElementById('knowledge-symbols-container'), wisdomGlow = document.getElementById('wisdom-glow'), slidesWrapper = document.getElementById('slidesWrapper'), captionEl = document.getElementById('caption'), prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), prizeTrigger = document.getElementById('prizeTrigger'), prizeModal = document.getElementById('prizeModal'), closePrizeBtn = document.getElementById('closePrizeBtn');
+            let currentSlide = 0;
+
+            function setupSlider() { slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="教師節照片"></div>`).join(''); showSlide(0); }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+            function openModal() {
+                triggerGlow();
+                setTimeout(() => { modal.classList.add('active'); showSlide(0); }, 200);
+            }
+            function closeModal() { modal.classList.remove('active'); }
+            function openPrizeModal() { prizeModal.classList.add('active'); }
+            function closePrizeModal() { prizeModal.classList.remove('active'); }
+
+            function createKnowledgeSymbol() {
+                const symbols = ['💡', 'α', 'β', 'π', '♫', '+', 'ƒ', '∫', '∞', 'A+', 'E=mc²'];
+                const symbolEl = document.createElement('div');
+                symbolEl.classList.add('symbol');
+                symbolEl.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                symbolEl.style.left = Math.random() * 95 + 'vw';
+                const duration = Math.random() * 10 + 10;
+                symbolEl.style.animationDuration = `${duration}s`;
+                symbolEl.style.fontSize = `${Math.random() * 12 + 16}px`;
+                symbolsContainer.appendChild(symbolEl);
+                setTimeout(() => symbolEl.remove(), duration * 1000);
+            }
+
+            function triggerGlow() {
+                wisdomGlow.classList.add('active');
+                setTimeout(() => {
+                    wisdomGlow.style.opacity = '0';
+                    setTimeout(() => {
+                        wisdomGlow.classList.remove('active');
+                        wisdomGlow.style.opacity = '';
+                    }, 600);
+                }, 300);
+            }
+
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            prizeTrigger.addEventListener('click', openPrizeModal);
+            closePrizeBtn.addEventListener('click', closePrizeModal);
+            prizeModal.addEventListener('click', (e) => { if (e.target === prizeModal) closePrizeModal(); });
+
+            setupSlider();
+            setInterval(createKnowledgeSymbol, 800);
+        });
+    </script>
+</body>
+</html>

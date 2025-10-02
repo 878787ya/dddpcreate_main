@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>特別的禮物 For You!</title>
+    
+    <!-- 引入 Google Fonts: Bungee (標題) 和 Noto Sans TC (內文) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (方便調整配色) --- */
+        :root {
+            --bg-color: #FFF0F5; /* 淺粉背景 */
+            --primary-color: #FF6B81; /* 活潑的紅粉色 */
+            --secondary-color: #FFD700; /* 金色 (緞帶用) */
+            --text-color: #4A4A4A; /* 深灰文字 */
+            --modal-bg: #FFFFFF;
+            --font-title: 'Bungee', cursive;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            height: 100%;
+            min-height: 100dvh; 
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden; /* 防止背景動畫產生捲軸 */
+            position: relative;
+        }
+
+        /* --- 背景漂浮愛心容器 --- */
+        #hearts-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* 確保不會擋到點擊 */
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .floating-heart {
+            position: absolute;
+            bottom: -50px; /* 從畫面下方開始 */
+            color: var(--primary-color);
+            opacity: 0.6;
+            animation: floatUp linear forwards;
+        }
+
+        /* --- 主畫面 (封面) --- */
+        .main-screen {
+            position: relative;
+            z-index: 1; /* 在愛心背景之上 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100dvh;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 3rem;
+            color: var(--primary-color);
+            text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+            animation: bounceIn 1s ease-out;
+        }
+
+        /* --- 禮物盒互動區 --- */
+        .gift-wrapper {
+            cursor: pointer;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 30px;
+            position: relative;
+            transition: transform 0.1s;
+            -webkit-tap-highlight-color: transparent; /* 移除手機點擊藍框 */
+        }
+
+        .gift-wrapper:active {
+            transform: scale(0.95);
+        }
+
+        .gift-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .gift-lid-group {
+            transform-origin: center 70px; /* 設定旋轉中心點 */
+            animation: wobble 2.5s infinite ease-in-out;
+        }
+
+        .gift-wrapper:hover .gift-lid-group,
+        .gift-wrapper:active .gift-lid-group {
+            animation-duration: 0.5s;
+        }
+
+        .instruction-text {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .open-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            font-family: var(--font-title);
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 107, 129, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .open-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 5px rgba(255, 107, 129, 0.4);
+        }
+
+        /* --- Footer --- */
+        .page-footer {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #aaa;
+            z-index: 5;
+        }
+
+        /* --- 彈出視窗 (Modal) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--modal-bg);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 20px;
+            padding: 30px 25px;
+            position: relative;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            
+            transform: translateY(50px) scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            color: #aaa;
+            background: none;
+            border: none;
+            cursor: pointer;
+            line-height: 1;
+            padding: 5px;
+            z-index: 10;
+        }
+
+        .modal-title {
+            font-family: var(--font-title);
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        /* --- 圖片輪播區塊 --- */
+        .slider-container {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            position: relative;
+            background-color: #eee; /* 圖片載入前的底色 */
+        }
+        
+        .slides-wrapper {
+            display: flex;
+            transition: transform 0.4s ease-in-out;
+        }
+
+        .slide {
+            flex: 0 0 100%; /* 每張圖佔滿 100% 寬度 */
+            aspect-ratio: 4 / 3; /* 保持圖片比例 */
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 確保圖片填滿容器不變形 */
+            display: block;
+        }
+
+        .slider-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background-color: rgba(255, 255, 255, 0.7);
+            color: var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s, background-color 0.2s;
+        }
+        .slider-nav:active { background-color: #fff; }
+
+        .slider-nav.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #prevBtn { left: 10px; }
+        #nextBtn { right: 10px; }
+
+        .caption-container {
+            font-size: 1rem;
+            color: #666;
+            min-height: 2.4em; /* 預留兩行高度，避免換行時跳動 */
+            line-height: 1.2;
+            padding: 0 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal-message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #555;
+            white-space: pre-line;
+        }
+
+        /* --- 動畫 Keyframes 定義 --- */
+        @keyframes wobble {
+            0% { transform: rotate(0deg); } 10% { transform: rotate(-3deg) translateY(-1px); } 20% { transform: rotate(3deg) translateY(-1px); } 30% { transform: rotate(-3deg) translateY(-1px); } 40% { transform: rotate(2deg) translateY(-1px); } 50% { transform: rotate(0deg); } 100% { transform: rotate(0deg); }
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; } 10% { opacity: 0.8; } 100% { transform: translateY(calc(-100dvh - 50px)) rotate(360deg); opacity: 0; }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); opacity: 1; } 70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+
+        /* 針對超小螢幕的調整 */
+        @media (max-height: 600px) {
+            .main-title { font-size: 2.5rem; margin-bottom: 20px; }
+            .gift-wrapper { width: 150px; height: 150px; }
+            .modal-content { padding: 20px; }
+            .modal-title { font-size: 1.5rem; margin-bottom: 10px; }
+            .page-footer { display: none; } /* 小螢幕就藏起來 */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="hearts-container"></div>
+
+    <main class="main-screen">
+        <h1 class="main-title">A Gift For You!</h1>
+
+        <div class="gift-wrapper" id="triggerGift" role="button" aria-label="打開禮物">
+            <svg class="gift-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="100" cy="185" rx="70" ry="15" fill="rgba(0,0,0,0.1)"/>
+                <rect x="40" y="80" width="120" height="100" rx="5" fill="#FF6B81"/>
+                <rect x="90" y="80" width="20" height="100" fill="#FFD700"/>
+                <g class="gift-lid-group">
+                    <rect x="30" y="60" width="140" height="30" rx="3" fill="#FF5269"/>
+                    <rect x="90" y="60" width="20" height="30" fill="#FFD700"/>
+                    <rect x="30" y="70" width="140" height="10" fill="#FFC200"/>
+                    <path d="M 90 60 C 70 30, 50 60, 90 70" fill="#FFD700" stroke="#E6C200" stroke-width="2"/>
+                    <path d="M 110 60 C 130 30, 150 60, 110 70" fill="#FFD700" stroke="#E6C200" stroke-width="2"/>
+                    <circle cx="100" cy="65" r="8" fill="#FFD700"/>
+                </g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 點擊禮物盒或按鈕打開 ↓</p>
+        <button class="open-button" id="triggerBtn">OPEN!</button>
+    </main>
+
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">Surprise!</h2>
+            
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper">
+                    <!-- 圖片會由 JavaScript 動態生成 -->
+                </div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+
+            <div id="caption" class="caption-container">
+                <!-- 註解文字會由 JavaScript 動態更新 -->
+            </div>
+            
+            <div class="modal-message">
+                <p>親愛的，<br><br>
+                這是一份特別為你準備的小驚喜。<br>
+                希望你喜歡！<br>
+                祝你天天都開心，笑容滿面！❤</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 資料區 ---
+            // TODO: 請在這裡新增/修改你的照片和註解
+            const galleryItems = [
+                {
+                    src: "https://picsum.photos/id/1080/800/600",
+                    caption: "第一張照片：充滿回憶的瞬間！"
+                },
+                {
+                    src: "https://picsum.photos/id/1015/800/600",
+                    caption: "第二次的出遊，陽光正好。"
+                },
+                {
+                    src: "https://picsum.photos/id/338/800/600",
+                    caption: "第三個驚喜，希望你會喜歡！❤️"
+                },
+                {
+                    src: "https://picsum.photos/id/211/800/600",
+                    caption: "還有這張！記得嗎？"
+                }
+            ];
+
+            // --- 元素選取 ---
+            const giftWrapper = document.getElementById('triggerGift');
+            const openBtn = document.getElementById('triggerBtn');
+            const modal = document.getElementById('modal');
+            const closeBtn = document.getElementById('closeBtn');
+            const heartsContainer = document.getElementById('hearts-container');
+            const slidesWrapper = document.getElementById('slidesWrapper');
+            const captionEl = document.getElementById('caption');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            let currentSlide = 0;
+
+            // --- 輪播功能初始化 ---
+            function setupSlider() {
+                // 根據 galleryItems 動態生成 HTML
+                slidesWrapper.innerHTML = galleryItems.map(item => `
+                    <div class="slide">
+                        <img src="${item.src}" alt="禮物照片">
+                    </div>
+                `).join('');
+                
+                // 顯示第一張幻燈片
+                showSlide(0);
+            }
+
+            function showSlide(index) {
+                // 邊界檢查
+                if (index < 0) index = 0;
+                if (index >= galleryItems.length) index = galleryItems.length - 1;
+
+                // 移動 slides-wrapper
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                
+                // 更新註解文字
+                captionEl.textContent = galleryItems[index].caption;
+                
+                // 更新當前索引
+                currentSlide = index;
+
+                // 更新按鈕的可見性
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+
+            // --- Modal 控制功能 ---
+            function openModal() {
+                modal.classList.add('active');
+                showSlide(0); // 每次打開都重置到第一張
+                if (navigator.vibrate) navigator.vibrate(50);
+            }
+
+            function closeModal() {
+                modal.classList.remove('active');
+            }
+
+            // --- 背景愛心動畫產生器 ---
+            const symbols = ['❤', '💖', '✨']; 
+            function createHeart() {
+                const heart = document.createElement('div');
+                heart.classList.add('floating-heart');
+                heart.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                heart.style.left = Math.random() * 100 + 'vw';
+                const size = (Math.random() * 1 + 1).toFixed(1);
+                heart.style.fontSize = size + 'rem';
+                const duration = Math.random() * 5 + 5;
+                heart.style.animationDuration = duration + 's';
+                heart.style.animationDelay = Math.random() * 2 + 's';
+                heartsContainer.appendChild(heart);
+                setTimeout(() => heart.remove(), (duration + 2) * 1000);
+            }
+
+            // --- 事件監聽 ---
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+
+            // --- 頁面啟動 ---
+            // 建立輪播內容
+            setupSlider();
+            // 初始產生背景愛心
+            for(let i=0; i<5; i++) { setTimeout(createHeart, i * 300); }
+            // 定時產生愛心
+            setInterval(createHeart, 800);
+        });
+    </script>
+</body>
+</html>

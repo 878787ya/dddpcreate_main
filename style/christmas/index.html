@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Merry Christmas!</title>
+    
+    <!-- 引入 Google Fonts: Mountains of Christmas, Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (聖誕風格) --- */
+        :root {
+            --bg-color: #F8F9FA; /* 接近雪的白色 */
+            --primary-color: #C82333; /* 聖誕紅 */
+            --secondary-color: #1E7E34; /* 聖誕綠 */
+            --accent-color: #FFC107; /* 金色 */
+            --text-color: #343A40;
+            --modal-bg: #FFFFFF;
+            --font-title: 'Mountains of Christmas', cursive;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: linear-gradient(to bottom, #E3F2FD, var(--bg-color));
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景飄雪容器 --- */
+        #snow-container {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .snowflake {
+            position: absolute; top: -20px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            filter: blur(1px);
+            animation: fall linear forwards infinite;
+        }
+
+        /* --- 雪地裝飾 --- */
+        .snow-ground {
+            position: absolute; bottom: 0; left: 0;
+            width: 100%; z-index: 1; pointer-events: none;
+        }
+
+        /* --- 主畫面 --- */
+        .main-screen {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100dvh; padding: 20px; text-align: center;
+        }
+
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 4.5rem;
+            color: var(--secondary-color);
+            text-shadow: 2px 2px 0px #fff, 4px 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            animation: bounceIn 1s ease-out;
+        }
+
+        /* --- 聖誕禮物互動區 --- */
+        .gift-wrapper {
+            cursor: pointer;
+            width: 200px; height: 200px;
+            margin-bottom: 30px; position: relative;
+            transition: transform 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .gift-wrapper:hover { transform: translateY(-5px) scale(1.05); }
+        .gift-wrapper:active { transform: scale(0.98); }
+
+        .gift-svg { width: 100%; height: 100%; overflow: visible; }
+        .gift-lid-group {
+            transform-origin: center 70px;
+            animation: wobble 2.5s infinite ease-in-out;
+        }
+
+        .instruction-text {
+            font-size: 1rem; color: var(--primary-color);
+            margin-bottom: 15px; font-weight: bold;
+        }
+
+        .open-button {
+            background-color: var(--primary-color);
+            color: white; border: 2px solid white;
+            padding: 15px 40px; font-size: 1.2rem;
+            border-radius: 50px;
+            font-family: var(--font-title);
+            font-weight: 700; letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(200, 35, 51, 0.3);
+            transition: all 0.2s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(200, 35, 51, 0.4); }
+        .open-button:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(200, 35, 51, 0.3); }
+
+        /* --- Footer --- */
+        .page-footer {
+            position: absolute; bottom: 15px; width: 100%;
+            text-align: center; font-size: 0.8rem; color: #A8DADC;
+            z-index: 5; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* --- 彈出視窗 (Modal) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(40, 167, 69, 0.3); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+
+        .modal-content {
+            background-color: var(--modal-bg);
+            width: 100%; max-width: 400px;
+            border-radius: 16px; border: 4px solid var(--primary-color);
+            padding: 30px 25px; position: relative; text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transform: translateY(30px) scale(0.95);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0) scale(1); }
+
+        .close-btn {
+            position: absolute; top: 10px; right: 15px; font-size: 2.2rem;
+            color: #FFB3BA; background: none; border: none;
+            cursor: pointer; line-height: 1; padding: 5px; z-index: 10;
+            transition: color 0.2s;
+        }
+        .close-btn:hover { color: var(--primary-color); }
+        
+        .modal-title {
+            font-family: var(--font-title); color: var(--primary-color);
+            font-size: 2.8rem; margin-bottom: 20px;
+        }
+
+        /* 圖片輪播 */
+        .slider-container { border-radius: 8px; border: 2px solid #FEEAEC; }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 15px; position: relative; background-color: #F8F9FA; }
+        .slides-wrapper { display: flex; transition: transform 0.4s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 6px; }
+        .slider-nav {
+            position: absolute; top: 50%; transform: translateY(-50%); border: none;
+            background-color: rgba(200, 35, 51, 0.6); color: white; border-radius: 50%;
+            width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.2s, background-color 0.2s;
+        }
+        .slider-nav:hover { background-color: rgba(200, 35, 51, 0.9); }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        
+        .caption-container { font-size: 1rem; color: var(--secondary-color); font-weight: bold; min-height: 2.4em; line-height: 1.2; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.6; color: #333; white-space: pre-line; }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes wobble { 0%{transform:rotate(0)}10%{transform:rotate(-3deg)}20%{transform:rotate(3deg)}30%{transform:rotate(-3deg)}40%{transform:rotate(2deg)}50%{transform:rotate(0)}100%{transform:rotate(0)} }
+        @keyframes fall {
+            to { transform: translateY(100vh); opacity: 0; }
+        }
+        @keyframes bounceIn { 0%{transform:scale(.3);opacity:0} 50%{transform:scale(1.05);opacity:1} 70%{transform:scale(.9)} 100%{transform:scale(1)} }
+
+        @media (max-height: 600px) {
+            .main-title { font-size: 3.5rem; margin-bottom: 20px; }
+            .gift-wrapper { width: 150px; height: 150px; }
+            .modal-title { font-size: 2rem; }
+            .snow-ground { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="snow-container"></div>
+
+    <main class="main-screen">
+        <h1 class="main-title">Merry Christmas</h1>
+
+        <div class="gift-wrapper" id="triggerGift" role="button" aria-label="打開禮物">
+            <!-- SVG 聖誕禮物 (與第一個版本相同，但配色不同) -->
+            <svg class="gift-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <g filter="url(#shadow)">
+                    <rect x="40" y="80" width="120" height="100" rx="5" fill="#C82333"/>
+                    <rect x="90" y="80" width="20" height="100" fill="#FFC107"/>
+                    <g class="gift-lid-group">
+                        <rect x="30" y="60" width="140" height="30" rx="3" fill="#DC3545"/>
+                        <rect x="90" y="60" width="20" height="30" fill="#FFC107"/>
+                        <rect x="30" y="70" width="140" height="10" fill="#FFD700"/>
+                        <path d="M 90 60 C 70 30, 50 60, 90 70" fill="#FFC107" stroke="#E6B300" stroke-width="2"/>
+                        <path d="M 110 60 C 130 30, 150 60, 110 70" fill="#FFC107" stroke="#E6B300" stroke-width="2"/>
+                        <circle cx="100" cy="65" r="8" fill="#FFC107"/>
+                    </g>
+                </g>
+                <defs><filter id="shadow"><feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.15"/></filter></defs>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 點擊禮物，拆開你的驚喜！ ↓</p>
+        <button class="open-button" id="triggerBtn">UNWRAP</button>
+    </main>
+    
+    <div class="snow-ground">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="#ffffff" fill-opacity="1" d="M0,256L48,245.3C96,235,192,213,288,208C384,203,480,213,576,229.3C672,245,768,267,864,250.7C960,235,1056,181,1152,170.7C1248,160,1344,192,1392,208L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>
+    </div>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">Our Christmas</h2>
+            
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            
+            <div class="modal-message">
+                <p>親愛的，<br><br>
+                願這個季節充滿溫暖、歡樂，<br>
+                以及我們共創的珍貴回憶。<br>
+                聖誕快樂！🎄❤️</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 資料區 ---
+            // TODO: 在這裡放入你們的聖誕照片和祝福
+            const galleryItems = [
+                { src: "https://picsum.photos/id/1015/800/600", caption: "我們的第一個聖誕節！" },
+                { src: "https://picsum.photos/id/211/800/600", caption: "交換禮物的溫馨時刻。" },
+                { src: "https://picsum.photos/id/674/800/600", caption: "聖誕市集的美好回憶！" },
+            ];
+
+            // --- 元素選取 ---
+            const giftWrapper = document.getElementById('triggerGift');
+            const openBtn = document.getElementById('triggerBtn');
+            const modal = document.getElementById('modal');
+            const closeBtn = document.getElementById('closeBtn');
+            const snowContainer = document.getElementById('snow-container');
+            const slidesWrapper = document.getElementById('slidesWrapper');
+            const captionEl = document.getElementById('caption');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            let currentSlide = 0;
+
+            // --- 輪播功能 ---
+            function setupSlider() {
+                slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="聖誕照片"></div>`).join('');
+                showSlide(0);
+            }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+
+            // --- Modal 控制 ---
+            function openModal() { modal.classList.add('active'); showSlide(0); if (navigator.vibrate) navigator.vibrate(50); }
+            function closeModal() { modal.classList.remove('active'); }
+
+            // --- 背景飄雪動畫 ---
+            function createSnowflake() {
+                const snowflake = document.createElement('div');
+                snowflake.classList.add('snowflake');
+                const size = Math.random() * 4 + 2; // 2px to 6px
+                snowflake.style.width = `${size}px`;
+                snowflake.style.height = `${size}px`;
+                snowflake.style.left = Math.random() * 100 + 'vw';
+                const duration = Math.random() * 5 + 5; // 5 to 10 seconds
+                snowflake.style.animationDuration = `${duration}s`;
+                snowflake.style.animationDelay = `${Math.random() * 5}s`;
+                snowflake.style.opacity = Math.random() * 0.5 + 0.3; // 0.3 to 0.8
+                
+                snowContainer.appendChild(snowflake);
+                setTimeout(() => snowflake.remove(), duration * 1000 + 5000);
+            }
+
+            // --- 事件監聽 ---
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+
+            // --- 頁面啟動 ---
+            setupSlider();
+            setInterval(createSnowflake, 200); // 產生雪花的速度快一點
+        });
+    </script>
+</body>
+</html>```

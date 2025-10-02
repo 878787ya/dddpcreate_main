@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>端午安康!</title>
+    
+    <!-- 引入 Google Fonts: ZCOOL XiaoWei (隸書感), Noto Sans TC (內文) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (端午節風格) --- */
+        :root {
+            --bg-color: #E0F2F1; /* 淺青色背景 */
+            --primary-color: #00796B; /* 粽葉綠 */
+            --secondary-color: #D32F2F; /* 龍舟紅 */
+            --accent-color: #FBC02D; /* 金黃色 */
+            --text-color: #263238; /* 深灰藍 */
+            --water-color: #4DB6AC; /* 水波色 */
+            --modal-bg: #FFFFF0;
+            --font-title: 'ZCOOL XiaoWei', serif;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: linear-gradient(to top, #B2DFDB, var(--bg-color));
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景動畫容器 (龍舟) --- */
+        #dragon-boat-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .dragon-boat {
+            position: absolute; width: 150px; opacity: 0.7;
+            animation: row-across linear forwards;
+        }
+
+        /* --- 裝飾 (香包) --- */
+        .sachet-decoration { position: absolute; width: 80px; opacity: 0.9; pointer-events: none; z-index: 5; animation: swing 4s infinite ease-in-out; transform-origin: top center; filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.2));}
+        .top-left-sachet { top: -10px; left: 10px; }
+        
+        /* --- 主畫面 --- */
+        .main-screen { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; padding: 20px; text-align: center; }
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 5.5rem;
+            color: var(--primary-color);
+            text-shadow: 2px 2px 0px #fff, 4px 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            animation: popIn 1s ease-out;
+        }
+
+        /* --- 粽子互動區 --- */
+        .zongzi-wrapper { cursor: pointer; width: 220px; height: 220px; margin-bottom: 20px; position: relative; transition: transform 0.2s ease; -webkit-tap-highlight-color: transparent; }
+        .zongzi-wrapper:hover { transform: scale(1.05); }
+        .zongzi-wrapper:active { transform: scale(0.98); }
+        .zongzi-svg { width: 100%; height: 100%; overflow: visible; animation: gentle-bob 3s infinite ease-in-out; }
+
+        .instruction-text { font-size: 1.1rem; color: #004D40; margin-bottom: 20px; font-family: var(--font-title); }
+        .open-button {
+            background-color: var(--primary-color); color: white;
+            border: none; padding: 15px 40px; font-size: 1.5rem;
+            border-radius: 8px; font-family: var(--font-title);
+            letter-spacing: 5px; cursor: pointer;
+            box-shadow: 0 4px 0 #004D40;
+            transition: all 0.1s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:active { transform: translateY(4px); box-shadow: 0 0 0 #004D40; }
+
+        /* --- 水波 --- */
+        .water-waves { position: absolute; bottom: 0; left: 0; width: 100%; z-index: 1; pointer-events: none; }
+        .page-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: #80CBC4; z-index: 5; }
+
+        /* --- 開啟特效 (綠葉綻放) --- */
+        #leaf-burst { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--primary-color); pointer-events: none; z-index: 99; opacity: 0; transform: scale(1.5); transition: all 0.5s ease-out; }
+        #leaf-burst.active { opacity: 0.7; transform: scale(1); }
+
+        /* --- 主 Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 77, 64, 0.8); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.4s 0.2s, visibility 0.4s 0.2s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); color: var(--text-color);
+            border: 1px solid #eee;
+            width: 100%; max-width: 400px; border-radius: 8px;
+            padding: 40px 25px 30px; position: relative; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: translateY(20px); transition: transform 0.4s 0.2s ease-out;
+        }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 2rem; color: #ccc; background: none; border: none; cursor: pointer; line-height: 1; padding: 5px; z-index: 10; transition: color 0.2s; }
+        .close-btn:hover { color: var(--secondary-color); }
+        .modal-title { font-family: var(--font-title); color: var(--primary-color); font-size: 2.8rem; margin-bottom: 20px; }
+        /* 圖片輪播 */
+        .slider-container { border-radius: 4px; border: 1px solid #eee; }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 20px; position: relative; background-color: #fff; }
+        .slides-wrapper { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav { background-color: rgba(255, 255, 255, 0.7); color: #333; position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .slider-nav:hover { background-color: white; }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        .caption-container { font-size: 1.1rem; color: #00695C; font-family: var(--font-title); min-height: 2.4em; line-height: 1.4; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.8; color: #555; white-space: pre-line; font-family: var(--font-title);}
+
+        /* --- 兌換獎品小粽子 --- */
+        .prize-trigger { position: absolute; bottom: 15px; right: 20px; width: 60px; height: 60px; cursor: pointer; z-index: 15; transition: transform 0.2s; animation: gentle-bob 4s infinite ease-in-out 1s; }
+        .prize-trigger:hover { transform: scale(1.1); animation-play-state: paused;}
+        .prize-trigger svg { filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.3)); }
+
+        /* --- 兌換獎品 Modal --- */
+        #prize-modal-overlay { z-index: 200; background-color: rgba(0,0,0,0.85); }
+        .prize-modal-content { padding: 40px 30px; border: none; background: #fff; }
+        .prize-qr-code { width: 100%; max-width: 200px; height: auto; border: 1px solid #ddd; padding: 5px; margin-bottom: 20px; }
+        .prize-text { font-size: 1.1rem; color: #333; font-family: var(--font-title); line-height: 1.6; }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes row-across { from { transform: translateX(-150px); } to { transform: translateX(100vw); } }
+        @keyframes popIn { 0%{transform:scale(.5);opacity:0} 70%{transform:scale(1.05);opacity:1} 100%{transform:scale(1)} }
+        @keyframes gentle-bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)} }
+        @keyframes swing { 0%,100%{transform:rotate(8deg)} 50%{transform:rotate(-8deg)} }
+
+        @media (max-width: 600px) { .main-title { font-size: 4rem; } .zongzi-wrapper { width: 180px; height: 180px; } }
+    </style>
+</head>
+<body>
+
+    <div id="dragon-boat-container"></div>
+    <div id="leaf-burst"></div>
+
+    <!-- 裝飾香包 -->
+    <svg class="sachet-decoration top-left-sachet" viewBox="0 0 100 120"><path d="M50 0 V10" stroke="#D32F2F" stroke-width="2"/><path d="M20 10 L80 10 L50 40 Z" fill="#FBC02D"/><path d="M20 10 L50 80 L80 10" fill="#D32F2F"/><path d="M40 80 L60 80 L50 90 Z" fill="#FBC02D"/><path d="M45 90 V120 M55 90 V120" stroke="#D32F2F" stroke-width="2"/></svg>
+
+    <main class="main-screen">
+        <h1 class="main-title">端午安康</h1>
+
+        <div class="zongzi-wrapper" id="triggerGift" role="button" aria-label="打開粽子">
+            <svg class="zongzi-svg" viewBox="0 0 200 200">
+                <defs><filter id="zongzi-shadow"><feDropShadow dx="5" dy="10" stdDeviation="5" flood-color="#000" flood-opacity="0.2"/></filter></defs>
+                <g class="zongzi-group" filter="url(#zongzi-shadow)">
+                    <path d="M100 20 L40 120 L160 120 Z" fill="#00796B"/>
+                    <path d="M100 20 L40 120 L100 150 Z" fill="#00695C"/>
+                    <path d="M100 20 L160 120 L100 150 Z" fill="#004D40"/>
+                    <path d="M100 15 L105 50 C 105 80, 70 80, 70 110 L75 130" stroke="#FBC02D" stroke-width="4" fill="none" stroke-linecap="round"/>
+                </g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 解開繩結，品嚐我們的回憶 ↓</p>
+        <button class="open-button" id="triggerBtn">開動</button>
+    </main>
+
+    <div class="water-waves">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+            <path fill="#4DB6AC" fill-opacity="0.5" d="M0,96L48,117.3C96,139,192,181,288,186.7C384,192,480,160,576,144C672,128,768,128,864,149.3C960,171,1056,213,1152,213.3C1248,213,1344,171,1392,149.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            <path fill="#4DB6AC" fill-opacity="1" d="M0,224L48,202.7C96,181,192,139,288,138.7C384,139,480,181,576,192C672,203,768,181,864,154.7C960,128,1056,96,1152,96C1248,96,1344,128,1392,144L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
+    </div>
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <!-- 主 Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">共度的時光</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>艾草飄香，龍舟競渡，<br>剝開的不是粽子，<br>是我們層層疊疊的珍貴回憶。<br>願你歲歲安康！🌿</p></div>
+            
+            <!-- 兌換獎品小粽子 -->
+            <div class="prize-trigger" id="prizeTrigger">
+                <svg viewBox="0 0 100 100"><path d="M50 5 L20 60 L80 60 Z" fill="#00796B"/><path d="M50 5 L20 60 L50 75 Z" fill="#00695C"/><path d="M50 5 L80 60 L50 75 Z" fill="#004D40"/><path d="M50 2 L52 25 C 52 40, 35 40, 35 55 L37 65" stroke="#FBC02D" stroke-width="2" fill="none"/></svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 兌換獎品 Modal -->
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal-content prize-modal-content">
+            <button class="close-btn" id="closePrizeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">端午小禮</h2>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=DragonBoatFestivalPrize" alt="兌換憑證" class="prize-qr-code">
+            <p class="prize-text">憑此畫面可兌換<br><strong>「冰涼消暑甜品」</strong>一份！</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryItems = [
+                { src: "https://picsum.photos/id/1015/800/600", caption: "記得去年一起去看的龍舟賽嗎？" },
+                { src: "https://picsum.photos/id/103/800/600", caption: "艾草的清香，是夏天的味道。"},
+                { src: "https://picsum.photos/id/450/800/600", caption: "願我們的日子，常有回憶可粽下。" },
+            ];
+
+            const giftWrapper = document.getElementById('triggerGift'), openBtn = document.getElementById('triggerBtn'), modal = document.getElementById('modal'), closeBtn = document.getElementById('closeBtn'), boatContainer = document.getElementById('dragon-boat-container'), leafBurst = document.getElementById('leaf-burst'), slidesWrapper = document.getElementById('slidesWrapper'), captionEl = document.getElementById('caption'), prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), prizeTrigger = document.getElementById('prizeTrigger'), prizeModal = document.getElementById('prizeModal'), closePrizeBtn = document.getElementById('closePrizeBtn');
+            let currentSlide = 0;
+
+            function setupSlider() { slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="端午照片"></div>`).join(''); showSlide(0); }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+            function openModal() {
+                triggerLeafBurst();
+                setTimeout(() => { modal.classList.add('active'); showSlide(0); }, 200);
+            }
+            function closeModal() { modal.classList.remove('active'); }
+            function openPrizeModal() { prizeModal.classList.add('active'); }
+            function closePrizeModal() { prizeModal.classList.remove('active'); }
+
+            function createDragonBoat() {
+                const boat = document.createElement('div');
+                boat.classList.add('dragon-boat');
+                boat.innerHTML = `<svg viewBox="0 0 150 50"><path d="M0 25 L10 20 L120 20 L140 10 L145 20 L150 15 L140 25 L120 25 L10 30 Z" fill="#D32F2F"/><path d="M20 20 V10 M40 20 V10 M60 20 V10 M80 20 V10 M100 20 V10" stroke="#FBC02D" stroke-width="2"/></svg>`;
+                boat.style.top = Math.random() * 40 + 20 + '%'; // 在畫面中部
+                const duration = Math.random() * 5 + 4; // 4-9s
+                boat.style.animationDuration = `${duration}s`;
+                // 隨機方向
+                if (Math.random() < 0.5) {
+                    boat.style.right = '0';
+                    boat.style.transform = 'scaleX(-1)';
+                } else {
+                    boat.style.left = '0';
+                }
+                boatContainer.appendChild(boat);
+                setTimeout(() => boat.remove(), duration * 1000);
+            }
+
+            function triggerLeafBurst() {
+                leafBurst.classList.add('active');
+                setTimeout(() => {
+                    leafBurst.style.opacity = '0';
+                    setTimeout(() => {
+                        leafBurst.classList.remove('active');
+                        leafBurst.style.opacity = '';
+                    }, 500);
+                }, 100);
+            }
+
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            prizeTrigger.addEventListener('click', openPrizeModal);
+            closePrizeBtn.addEventListener('click', closePrizeModal);
+            prizeModal.addEventListener('click', (e) => { if (e.target === prizeModal) closePrizeModal(); });
+
+            setupSlider();
+            setInterval(createDragonBoat, 3000);
+        });
+    </script>
+</body>
+</html>

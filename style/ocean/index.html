@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>一份特別的寶藏!</title>
+    
+    <!-- 引入 Google Fonts: Pacifico, Fredoka One, Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Fredoka+One&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (海洋風格) --- */
+        :root {
+            --bg-color: #F0F8FF; /* 淺藍背景 (愛麗絲藍) */
+            --primary-color: #0077B6; /* 海洋藍 */
+            --secondary-color: #F4A261; /* 暖沙色/木色 */
+            --text-color: #033F63; /* 深海藍文字 */
+            --light-blue: #ADE8F4; /* 淺藍 (氣泡) */
+            --modal-bg: #FFFFFF;
+            --font-main-title: 'Pacifico', cursive;
+            --font-modal-title: 'Fredoka One', cursive;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            height: 100%;
+            min-height: 100dvh; 
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- 背景上升氣泡容器 --- */
+        #bubbles-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -50px;
+            background-color: rgba(173, 232, 244, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: riseUp linear forwards;
+        }
+
+        /* --- 主畫面 (封面) --- */
+        .main-screen {
+            position: relative;
+            z-index: 2; /* 在海浪之上 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100dvh;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .main-title {
+            font-family: var(--font-main-title);
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            margin-bottom: 40px;
+            animation: fadeInDown 1s ease-out;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* --- 寶藏箱互動區 --- */
+        .treasure-wrapper {
+            cursor: pointer;
+            width: 220px;
+            height: 220px;
+            margin-bottom: 30px;
+            position: relative;
+            transition: transform 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .treasure-wrapper:hover {
+            transform: scale(1.05);
+        }
+        .treasure-wrapper:active {
+            transform: scale(0.98);
+        }
+
+        .treasure-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .chest-lid-group {
+            transform-origin: center 100px;
+            animation: wobble 3s infinite ease-in-out;
+        }
+
+        .instruction-text {
+            font-size: 1rem;
+            color: #0096C7;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .open-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            font-family: var(--font-modal-title);
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 119, 182, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .open-button:hover {
+            box-shadow: 0 6px 20px rgba(0, 119, 182, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .open-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 5px rgba(0, 119, 182, 0.3);
+        }
+
+        /* --- 海浪頁尾 --- */
+        .ocean-waves {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- Footer --- */
+        .page-footer {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #90E0EF;
+            z-index: 5;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* --- 彈出視窗 (Modal) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 59, 90, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--modal-bg);
+            width: 100%;
+            max-width: 400px;
+            border-radius: 16px;
+            padding: 30px 25px;
+            position: relative;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border: 3px solid #CAF0F8;
+            transform: translateY(30px) scale(0.98);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            color: #90E0EF;
+            background: none;
+            border: none;
+            cursor: pointer;
+            line-height: 1;
+            padding: 5px;
+            z-index: 10;
+            transition: color 0.2s;
+        }
+        .close-btn:hover { color: var(--primary-color); }
+
+        .modal-title {
+            font-family: var(--font-modal-title);
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+
+        /* --- 圖片輪播區塊 --- */
+        .slider-container, .slide img {
+            border-radius: 12px;
+        }
+        .slider-container {
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 15px;
+            position: relative;
+            background-color: #F0F8FF;
+        }
+        .slides-wrapper { display: flex; transition: transform 0.4s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        .slider-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            border: none; background-color: rgba(0, 119, 182, 0.6); color: white;
+            border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.2s, background-color 0.2s;
+        }
+        .slider-nav:hover { background-color: rgba(0, 119, 182, 0.8); }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; }
+        #nextBtn { right: 10px; }
+
+        .caption-container {
+            font-size: 1rem; color: #0077B6; min-height: 2.4em;
+            line-height: 1.2; padding: 0 10px; margin-bottom: 20px;
+        }
+        .modal-message { font-size: 1.1rem; line-height: 1.6; color: #555; white-space: pre-line; }
+
+        /* --- 動畫 Keyframes 定義 --- */
+        @keyframes wobble {
+            0%{transform:rotate(0)}15%{transform:rotate(-2deg)}30%{transform:rotate(2deg)}45%{transform:rotate(-1.5deg)}60%{transform:rotate(0)}100%{transform:rotate(0)}
+        }
+        @keyframes riseUp {
+            from { bottom: -50px; opacity: 0; transform: translateX(0); }
+            10% { opacity: 1; }
+            to { bottom: 100vh; opacity: 0; transform: translateX(calc(var(--x-drift) * 100px)); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-height: 600px) {
+            .main-title { font-size: 2.8rem; margin-bottom: 20px; }
+            .treasure-wrapper { width: 160px; height: 160px; }
+            .modal-content { padding: 20px; }
+            .modal-title { font-size: 1.8rem; margin-bottom: 10px; }
+            .page-footer { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bubbles-container"></div>
+
+    <main class="main-screen">
+        <h1 class="main-title">A Treasure For You</h1>
+
+        <div class="treasure-wrapper" id="triggerGift" role="button" aria-label="打開寶藏">
+            <!-- SVG 寶藏箱 -->
+            <svg class="treasure-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+                        <feOffset dx="2" dy="4" result="offsetblur"/>
+                        <feComponentTransfer>
+                            <feFuncA type="linear" slope="0.3"/>
+                        </feComponentTransfer>
+                        <feMerge>
+                            <feMergeNode/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <g filter="url(#shadow)">
+                    <!-- 箱子底部 -->
+                    <path d="M 30 110 L 30 170 C 30 175, 35 180, 40 180 L 160 180 C 165 180, 170 175, 170 170 L 170 110 Z" fill="#A0522D"/>
+                    <!-- 箱子金屬邊框 -->
+                    <rect x="25" y="105" width="150" height="15" rx="3" fill="#F4A261"/>
+                    <rect x="25" y="165" width="150" height="20" rx="3" fill="#F4A261"/>
+                    <!-- 蓋子群組 (套用動畫) -->
+                    <g class="chest-lid-group">
+                        <!-- 蓋子弧頂 -->
+                        <path d="M 25 110 C 25 60, 175 60, 175 110 Z" fill="#8B4513"/>
+                        <!-- 蓋子金屬邊框 -->
+                        <path d="M 25 105 C 25 55, 175 55, 175 105 L 173 105 C 173 57, 27 57, 27 105 Z" fill="#F4A261"/>
+                        <!-- 鎖 -->
+                        <rect x="90" y="100" width="20" height="25" fill="#FFD700" rx="3"/>
+                        <circle cx="100" cy="115" r="3" fill="#DAA520"/>
+                    </g>
+                </g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 點擊寶藏箱或按鈕打開 ↓</p>
+        <button class="open-button" id="triggerBtn">OPEN</button>
+    </main>
+
+    <!-- SVG 海浪 -->
+    <div class="ocean-waves">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+            <path fill="#0096C7" fill-opacity="0.5" d="M0,224L48,208C96,192,192,160,288,165.3C384,171,480,213,576,240C672,267,768,277,864,256C960,235,1056,181,1152,154.7C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            <path fill="#0096C7" fill-opacity="1" d="M0,288L48,272C96,256,192,224,288,197.3C384,171,480,149,576,165.3C672,181,768,235,864,240C960,245,1056,203,1152,186.7C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
+    </div>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">My Treasure</h2>
+            
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            
+            <div class="modal-message">
+                <p>親愛的，<br><br>
+                這是我為你珍藏的寶物，<br>
+                每一個畫面都是我們的閃亮回憶。<br>
+                希望你會喜歡！✨</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 資料區 ---
+            // TODO: 請在這裡新增/修改你的照片和註解
+            const galleryItems = [
+                { src: "https://picsum.photos/id/1015/800/600", caption: "我們的第一次海邊旅行！" },
+                { src: "https://picsum.photos/id/211/800/600", caption: "陽光、沙灘，還有你。" },
+                { src: "https://picsum.photos/id/1080/800/600", caption: "這個瞬間，就像寶藏一樣閃閃發光。"},
+            ];
+
+            // --- 元素選取 ---
+            const giftWrapper = document.getElementById('triggerGift');
+            const openBtn = document.getElementById('triggerBtn');
+            const modal = document.getElementById('modal');
+            const closeBtn = document.getElementById('closeBtn');
+            const bubblesContainer = document.getElementById('bubbles-container');
+            const slidesWrapper = document.getElementById('slidesWrapper');
+            const captionEl = document.getElementById('caption');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            let currentSlide = 0;
+
+            // --- 輪播功能 ---
+            function setupSlider() {
+                slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="寶藏照片"></div>`).join('');
+                showSlide(0);
+            }
+            function showSlide(index) {
+                if (index < 0) index = 0;
+                if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+
+            // --- Modal 控制 ---
+            function openModal() {
+                modal.classList.add('active');
+                showSlide(0);
+                if (navigator.vibrate) navigator.vibrate(50);
+            }
+            function closeModal() {
+                modal.classList.remove('active');
+            }
+
+            // --- 背景氣泡動畫 ---
+            function createBubble() {
+                const bubble = document.createElement('div');
+                bubble.classList.add('bubble');
+                const size = Math.random() * 30 + 10;
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = Math.random() * 100 + 'vw';
+                const duration = Math.random() * 8 + 5;
+                bubble.style.animationDuration = `${duration}s`;
+                // 增加左右飄移
+                bubble.style.setProperty('--x-drift', Math.random() * 2 - 1);
+                bubblesContainer.appendChild(bubble);
+                setTimeout(() => bubble.remove(), duration * 1000);
+            }
+
+            // --- 事件監聽 ---
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+
+            // --- 頁面啟動 ---
+            setupSlider();
+            setInterval(createBubble, 500);
+        });
+    </script>
+</body>
+</html>```

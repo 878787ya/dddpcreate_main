@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy New Year!</title>
+    
+    <!-- 引入 Google Fonts: Great Vibes (草寫), Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" class=" crossorigin">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (1/1 新年風格) --- */
+        :root {
+            --bg-color: #0c0c1e; /* 深夜藍 */
+            --primary-color: #FFD700; /* 金色 */
+            --secondary-color: #C0C0C0; /* 銀色 */
+            --text-color: #FFFFFF;
+            --modal-bg: #1a1a1a;
+            --modal-text-color: #E0E0E0;
+            --font-title: 'Great Vibes', cursive;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: radial-gradient(ellipse at bottom, #1e1e3f, var(--bg-color));
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景動畫容器 (碎金) --- */
+        #confetti-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .confetti {
+            position: absolute; top: -20px;
+            animation: fall linear forwards;
+            font-weight: bold;
+        }
+
+        /* --- 主畫面 --- */
+        .main-screen { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; padding: 20px; text-align: center; }
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 5rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-color), 0 0 20px var(--primary-color), 0 0 40px rgba(255, 215, 0, 0.5);
+            margin-bottom: 40px;
+            animation: fadeIn 2s ease-out;
+        }
+
+        /* --- 禮盒互動區 --- */
+        .gift-wrapper { cursor: pointer; width: 200px; height: 200px; margin-bottom: 30px; position: relative; transition: transform 0.2s ease; -webkit-tap-highlight-color: transparent; }
+        .gift-wrapper:hover { transform: scale(1.05); }
+        .gift-wrapper:active { transform: scale(0.98); }
+        .gift-svg { width: 100%; height: 100%; overflow: visible; animation: subtleGlow 4s infinite ease-in-out; }
+        .gift-lid-group { transform-origin: center 70px; animation: wobble 3s infinite ease-in-out; }
+
+        .instruction-text { font-size: 1rem; color: var(--secondary-color); margin-bottom: 15px; }
+        .open-button {
+            background: linear-gradient(45deg, var(--primary-color), #FFECB3); color: #333;
+            border: none; padding: 15px 40px; font-size: 1.3rem; font-weight: bold;
+            border-radius: 50px; font-family: 'Noto Sans TC', sans-serif;
+            letter-spacing: 2px; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+            transition: all 0.2s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(255, 215, 0, 0.4); }
+        .open-button:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(255, 215, 0, 0.3); }
+
+        /* --- Footer --- */
+        .page-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: #555; z-index: 5; }
+
+        /* --- 煙火特效容器 --- */
+        #fireworks-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; opacity: 0; transition: opacity 0.5s 1.5s; /* 延長煙火時間 */ }
+        #fireworks-container.active { opacity: 1; transition: none; }
+        .particle { position: absolute; border-radius: 50%; animation: explode 1.5s ease-out forwards; }
+
+        /* --- 主 Modal (照片輪播) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(10, 10, 20, 0.8); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.5s 0.5s, visibility 0.5s 0.5s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); color: var(--modal-text-color);
+            border: 2px solid var(--primary-color);
+            width: 100%; max-width: 400px; border-radius: 16px;
+            padding: 30px 25px; position: relative; text-align: center;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+            transform: scale(0.9); transition: transform 0.4s 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 2.2rem; color: #555; background: none; border: none; cursor: pointer; line-height: 1; padding: 5px; z-index: 10; transition: color 0.2s; }
+        .close-btn:hover { color: var(--primary-color); }
+        .modal-title { font-family: 'Noto Sans TC', sans-serif; font-weight: bold; color: var(--primary-color); font-size: 2rem; margin-bottom: 20px; }
+        /* 圖片輪播 */
+        .slider-container { border-radius: 8px; border: 2px solid #333; }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 15px; position: relative; background-color: #000; }
+        .slides-wrapper { display: flex; transition: transform 0.4s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav { background-color: rgba(255, 215, 0, 0.5); color: #000; position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .slider-nav:hover { background-color: rgba(255, 215, 0, 1); }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        .caption-container { font-size: 1rem; color: #aaa; min-height: 2.4em; line-height: 1.2; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.6; color: #ccc; white-space: pre-line; }
+
+        /* --- 兌換獎品小禮物圖示 --- */
+        .prize-trigger { position: absolute; bottom: 20px; right: 20px; width: 50px; height: 50px; cursor: pointer; z-index: 15; transition: transform 0.2s; animation: shake 5s infinite ease-in-out 2s; }
+        .prize-trigger:hover { transform: scale(1.1); animation-play-state: paused; }
+        .prize-trigger svg { filter: drop-shadow(3px 3px 5px rgba(0,0,0,0.5)); }
+
+        /* --- 兌換獎品 Modal --- */
+        #prize-modal-overlay { z-index: 200; }
+        .prize-modal-content { padding: 40px 30px; }
+        .prize-qr-code { width: 100%; max-width: 200px; height: auto; border: 5px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .prize-text { font-size: 1rem; color: #ccc; }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes fall { from { transform: translateY(0) rotate(0); } to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes wobble { 0%,100%{transform:rotate(0)} 10%{transform:rotate(-2deg)} 20%{transform:rotate(2deg)} 30%{transform:rotate(-2deg)} 40%{transform:rotate(1deg)} 50%{transform:rotate(0)} }
+        @keyframes subtleGlow { 0%, 100% { filter: drop-shadow(0 0 5px var(--primary-color)); } 50% { filter: drop-shadow(0 0 15px var(--primary-color)); } }
+        @keyframes explode { from { transform: translate(0, 0) scale(1); opacity: 1; } to { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; } }
+        @keyframes shake { 0%, 5%, 100% {transform:rotate(0)} 1% {transform:rotate(-8deg)} 2% {transform:rotate(8deg)} 3% {transform:rotate(-5deg)} 4% {transform:rotate(5deg)} }
+        
+        @media (max-width: 600px) { .main-title { font-size: 4rem; } }
+    </style>
+</head>
+<body>
+
+    <div id="confetti-container"></div>
+    <div id="fireworks-container"></div>
+
+    <main class="main-screen">
+        <h1 class="main-title">Happy New Year</h1>
+
+        <div class="gift-wrapper" id="triggerGift" role="button" aria-label="打開禮物">
+            <svg class="gift-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <rect x="40" y="80" width="120" height="100" rx="5" fill="#111"/>
+                <rect x="90" y="80" width="20" height="100" fill="url(#gold-gradient)"/>
+                <g class="gift-lid-group">
+                    <rect x="30" y="60" width="140" height="30" rx="3" fill="#222"/>
+                    <rect x="90" y="60" width="20" height="30" fill="url(#gold-gradient)"/>
+                    <rect x="30" y="70" width="140" height="10" fill="url(#gold-gradient-h)"/>
+                    <path d="M 90 60 C 70 30, 50 60, 90 70" fill="url(#gold-gradient)"/>
+                    <path d="M 110 60 C 130 30, 150 60, 110 70" fill="url(#gold-gradient)"/>
+                    <circle cx="100" cy="65" r="8" fill="url(#gold-gradient)"/>
+                </g>
+                <defs>
+                    <linearGradient id="gold-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFDF70;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#FFC107;stop-opacity:1" />
+                    </linearGradient>
+                     <linearGradient id="gold-gradient-h" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#FFDF70;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#FFC107;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 點擊禮盒，迎接新的一年 ↓</p>
+        <button class="open-button" id="triggerBtn">CELEBRATE!</button>
+    </main>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">Our Moments</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>親愛的，<br><br>隨著煙火綻放，舊的一年過去了。<br>願新的一年，我們的故事更加精彩！<br>新年快樂！✨</p></div>
+            
+            <div class="prize-trigger" id="prizeTrigger">
+                <svg viewBox="0 0 100 100"><g fill="#FFD700"><path d="M85 40 H15 V60 H85 Z"/><path d="M55 40 V15 H45 V40 Z"/><path d="M90 60 H10 V90 H90 Z"/><path d="M50 60 A20 20 0 0 0 50 20 A20 20 0 0 0 50 60"/></g></svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal-content prize-modal-content">
+            <button class="close-btn" id="closePrizeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">新年禮物</h2>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=NewYearPrize-2026" alt="兌換憑證" class="prize-qr-code">
+            <p class="prize-text">憑此畫面可兌換<br><strong>「新年驚喜」</strong>一份！</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryItems = [
+                { src: "https://picsum.photos/id/1018/800/600", caption: "去年的跨年夜，星空下的我們。" },
+                { src: "https://picsum.photos/id/1041/800/600", caption: "一起許下的新年新希望！"},
+                { src: "https://picsum.photos/id/1079/800/600", caption: "新的一年，第一道曙光。" },
+            ];
+
+            const giftWrapper = document.getElementById('triggerGift'), openBtn = document.getElementById('triggerBtn'), modal = document.getElementById('modal'), closeBtn = document.getElementById('closeBtn'), confettiContainer = document.getElementById('confetti-container'), fireworksContainer = document.getElementById('fireworks-container'), slidesWrapper = document.getElementById('slidesWrapper'), captionEl = document.getElementById('caption'), prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), prizeTrigger = document.getElementById('prizeTrigger'), prizeModal = document.getElementById('prizeModal'), closePrizeBtn = document.getElementById('closePrizeBtn');
+            let currentSlide = 0;
+
+            function setupSlider() { slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="新年照片"></div>`).join(''); showSlide(0); }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+            function openModal() {
+                triggerFireworks();
+                setTimeout(() => { modal.classList.add('active'); showSlide(0); }, 500);
+            }
+            function closeModal() { modal.classList.remove('active'); }
+            function openPrizeModal() { prizeModal.classList.add('active'); }
+            function closePrizeModal() { prizeModal.classList.remove('active'); }
+
+            function createConfetti() {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.innerText = Math.random() > 0.5 ? '•' : '*';
+                confetti.style.color = Math.random() > 0.5 ? 'var(--primary-color)' : 'var(--secondary-color)';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                const duration = Math.random() * 5 + 5;
+                confetti.style.animationDuration = `${duration}s`;
+                confetti.style.animationDelay = `${Math.random() * 5}s`;
+                confetti.style.fontSize = `${Math.random() * 10 + 10}px`;
+                confettiContainer.appendChild(confetti);
+                setTimeout(() => confetti.remove(), duration * 1000 + 5000);
+            }
+            function triggerFireworks() {
+                fireworksContainer.classList.add('active');
+                const colors = ['#FFD700', '#C0C0C0', '#FFFFFF'];
+                const fireworksCount = 3; // 施放 3 波
+                for (let j = 0; j < fireworksCount; j++) {
+                    setTimeout(() => {
+                        const xPos = Math.random() * 60 + 20 + '%';
+                        const yPos = Math.random() * 40 + 30 + '%';
+                        for (let i = 0; i < 60; i++) {
+                            const p = document.createElement('div');
+                            p.classList.add('particle');
+                            const angle = Math.random()*360; const dist = Math.random()*200+50;
+                            p.style.setProperty('--x', `${Math.cos(angle*Math.PI/180)*dist}px`);
+                            p.style.setProperty('--y', `${Math.sin(angle*Math.PI/180)*dist}px`);
+                            p.style.background = colors[Math.floor(Math.random()*colors.length)];
+                            const size = Math.random()*4+2;
+                            p.style.width = `${size}px`; p.style.height = `${size}px`;
+                            p.style.top = yPos; p.style.left = xPos;
+                            fireworksContainer.appendChild(p);
+                            setTimeout(() => p.remove(), 1500);
+                        }
+                    }, j * 400); // 每隔 400ms 施放一波
+                }
+                setTimeout(() => fireworksContainer.classList.remove('active'), 2000);
+            }
+
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            prizeTrigger.addEventListener('click', openPrizeModal);
+            closePrizeBtn.addEventListener('click', closePrizeModal);
+            prizeModal.addEventListener('click', (e) => { if (e.target === prizeModal) closePrizeModal(); });
+
+            setupSlider();
+            setInterval(createConfetti, 300);
+        });
+    </script>
+</body>
+</html>
