@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sakura no Toki</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (和風櫻花祭風格) --- */
+        :root {
+            --bg-color: #FEF9F3; /* 柔和米白 */
+            --primary-color: #D8BFD8; /* 淺紫色 */
+            --secondary-color: #FFB6C1; /* 淺粉色 */
+            --accent-color: #8B4513; /* 木色 */
+            --text-color: #555;
+            --modal-bg: rgba(255, 250, 245, 0.9);
+            --font-title: 'Noto Serif TC', serif;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: linear-gradient(to bottom, #E6E6FA, var(--bg-color));
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景動畫容器 (櫻花) --- */
+        #sakura-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .petal {
+            position: absolute; top: -5%;
+            font-size: 20px;
+            color: var(--secondary-color);
+            animation: fall linear forwards;
+        }
+
+        /* --- 主畫面 --- */
+        .main-screen { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; padding: 20px; text-align: center; }
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 4rem;
+            color: var(--primary-color);
+            text-shadow: 1px 1px 2px #fff;
+            margin-bottom: 20px;
+            animation: fadeInDown 1.5s ease-out;
+            letter-spacing: 5px;
+        }
+
+        /* --- 紙傘互動區 --- */
+        .umbrella-wrapper { cursor: pointer; width: 250px; height: 250px; margin-bottom: 20px; position: relative; -webkit-tap-highlight-color: transparent; }
+        .umbrella-svg { width: 100%; height: 100%; overflow: visible; animation: spin 20s infinite linear; }
+        
+        .instruction-text { font-size: 1.1rem; color: #aaa; margin-bottom: 20px; }
+        .open-button {
+            background-color: var(--primary-color); color: white;
+            border: none; padding: 12px 35px; font-size: 1.3rem;
+            border-radius: 50px; font-family: var(--font-title);
+            letter-spacing: 5px; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(216, 191, 216, 0.5);
+            transition: all 0.2s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(216, 191, 216, 0.6); }
+        .open-button:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(216, 191, 216, 0.5); }
+        
+        .page-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: #ddd; z-index: 5; }
+        
+        /* --- 開啟特效 (櫻花旋風) --- */
+        #sakura-burst { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; }
+        .burst-petal { position: absolute; top: 50%; left: 50%; font-size: 24px; color: var(--secondary-color); animation: sakura-explode 0.8s ease-out forwards; }
+
+        /* --- 主 Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(254, 249, 243, 0.7); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.5s 0.3s, visibility 0.5s 0.3s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); color: var(--text-color);
+            border: 2px solid #EAE0D5;
+            width: 100%; max-width: 400px; border-radius: 4px;
+            padding: 40px 25px 30px; position: relative; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transform: scale(0.95); transition: transform 0.5s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 2rem; color: #ccc; background: none; border: none; cursor: pointer; z-index: 10; transition: color 0.2s; }
+        .close-btn:hover { color: var(--primary-color); }
+        .modal-title { font-family: var(--font-title); color: var(--accent-color); font-size: 2.8rem; margin-bottom: 20px; }
+        /* 圖片輪播 */
+        .slider-container { border-radius: 2px; border: 1px solid #EAE0D5; }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 20px; position: relative; background-color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .slides-wrapper { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav { background-color: rgba(255, 255, 255, 0.7); color: #888; position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .slider-nav:hover { background-color: white; }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        .caption-container { font-size: 1.1rem; color: #C38D9E; min-height: 2.4em; line-height: 1.4; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.8; color: #555; }
+
+        /* --- 兌換獎品御守 --- */
+        .prize-trigger { position: absolute; bottom: 20px; right: 20px; width: 60px; height: 70px; cursor: pointer; z-index: 15; transition: transform 0.2s; }
+        .prize-trigger:hover { transform: scale(1.1); }
+        .prize-trigger svg { filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.1)); animation: swing 4s infinite ease-in-out 1s; transform-origin: top center;}
+
+        /* --- 兌換獎品 Modal --- */
+        #prize-modal-overlay { z-index: 200; background-color: rgba(0,0,0,0.8); }
+        .prize-modal-content { padding: 40px 30px; border: none; background: #fff; }
+        .prize-qr-code { width: 100%; max-width: 200px; height: auto; border: 1px solid #ddd; padding: 5px; margin-bottom: 20px; }
+        .prize-text { font-size: 1.1rem; color: #333; line-height: 1.6; }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes fall {
+            from { transform: translateY(0) rotate(0); }
+            to { transform: translateY(105vh) rotate(calc(var(--r) * 1turn)); opacity: var(--o); }
+        }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes sakura-explode {
+            from { transform: translate(0, 0) scale(0); opacity: 1; }
+            to { transform: translate(var(--x), var(--y)) scale(1.5) rotate(calc(var(--rot) * 360deg)); opacity: 0; }
+        }
+        @keyframes swing { 0%,100%{transform:rotate(5deg)} 50%{transform:rotate(-5deg)} }
+
+        @media (max-width: 600px) { .main-title { font-size: 3rem; } .umbrella-wrapper { width: 220px; height: 220px; } }
+    </style>
+</head>
+<body>
+
+    <div id="sakura-container"></div>
+    <div id="sakura-burst"></div>
+
+    <main class="main-screen">
+        <h1 class="main-title">桜の時</h1>
+
+        <div class="umbrella-wrapper" id="triggerGift" role="button" aria-label="打開回憶">
+            <svg class="umbrella-svg" viewBox="0 0 200 200">
+                <defs><filter id="item-shadow"><feDropShadow dx="0" dy="8" stdDeviation="5" flood-color="#000" flood-opacity="0.1"/></filter></defs>
+                <g filter="url(#item-shadow)">
+                    <path d="M100 0 L100 200" stroke="var(--accent-color)" stroke-width="4"/>
+                    <path d="M10 100 A 90 90 0 0 1 190 100" fill="var(--secondary-color)" opacity="0.8"/>
+                    <path d="M10 100 A 90 90 0 0 1 100 10" stroke="#fff" stroke-width="1" fill="none" opacity="0.5"/>
+                    <path d="M100 10 L100 100" stroke="#fff" stroke-width="1" fill="none" opacity="0.5"/>
+                    <path d="M190 100 L100 100" stroke="#fff" stroke-width="1" fill="none" opacity="0.5"/>
+                    <text x="50" y="80" font-size="20" fill="white">🌸</text>
+                    <text x="130" y="80" font-size="20" fill="white">🌸</text>
+                </g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 輕觸紙傘，春櫻為你綻放 ↓</p>
+        <button class="open-button" id="triggerBtn">開く</button>
+    </main>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <!-- 主 Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">思い出</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>親愛的，<br><br>櫻花飄落的速度，是秒速五厘米。<br>而我想念你的速度，是每個瞬間。<br>願我們的回憶，如春櫻般爛漫。🌸</p></div>
+            
+            <div class="prize-trigger" id="prizeTrigger">
+                <svg viewBox="0 0 80 100"><path d="M10 0 H70 L40 30 Z" fill="#D8BFD8"/><rect x="10" y="20" width="60" height="60" fill="#FFB6C1"/><path d="M20 80 H60 V90 H20 Z" fill="#D8BFD8"/><path d="M40 0 V-10 M30 85 V100 M50 85 V100" stroke="#8B4513" stroke-width="2" fill="none"/><text x="40" y="60" font-size="30" text-anchor="middle" fill="white">絆</text></svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 兌換獎品 Modal -->
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal-content prize-modal-content">
+            <button class="close-btn" id="closePrizeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">願い事</h2>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=SakuraPrize" alt="兌換憑證" class="prize-qr-code">
+            <p class="prize-text">憑此御守可兌換<br><strong>「一份春日限定的和菓子」</strong><br>願你，日日是好日。</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryItems = [
+                { src: "https://picsum.photos/id/1011/800/600", caption: "櫻花樹下的第一次相遇。" },
+                { src: "https://picsum.photos/id/1027/800/600", caption: "春日暖陽，歲月靜好。"},
+                { src: "https://picsum.photos/id/1040/800/600", caption: "期待下一個與你共賞的櫻花季。" },
+            ];
+
+            const giftWrapper = document.getElementById('triggerGift'), openBtn = document.getElementById('triggerBtn'), modal = document.getElementById('modal'), closeBtn = document.getElementById('closeBtn'), sakuraContainer = document.getElementById('sakura-container'), sakuraBurst = document.getElementById('sakura-burst'), slidesWrapper = document.getElementById('slidesWrapper'), captionEl = document.getElementById('caption'), prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), prizeTrigger = document.getElementById('prizeTrigger'), prizeModal = document.getElementById('prizeModal'), closePrizeBtn = document.getElementById('closePrizeBtn');
+            let currentSlide = 0;
+
+            function setupSlider() { slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="Sakura Photo"></div>`).join(''); showSlide(0); }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+            function openModal() {
+                triggerSakuraBurst();
+                setTimeout(() => { modal.classList.add('active'); showSlide(0); }, 300);
+            }
+            function closeModal() { modal.classList.remove('active'); }
+            function openPrizeModal() { prizeModal.classList.add('active'); }
+            function closePrizeModal() { prizeModal.classList.remove('active'); }
+
+            function createPetal() {
+                const petal = document.createElement('div');
+                petal.classList.add('petal');
+                petal.innerHTML = '🌸';
+                petal.style.left = Math.random() * 100 + 'vw';
+                petal.style.animationDuration = Math.random() * 5 + 5 + 's';
+                petal.style.animationDelay = Math.random() * 5 + 's';
+                petal.style.setProperty('--r', Math.random());
+                petal.style.setProperty('--o', Math.random() * 0.5 + 0.3);
+                petal.style.fontSize = Math.random() * 10 + 15 + 'px';
+                sakuraContainer.appendChild(petal);
+                setTimeout(() => petal.remove(), 10000);
+            }
+            
+            function triggerSakuraBurst() {
+                for (let i = 0; i < 30; i++) {
+                    const p = document.createElement('div');
+                    p.classList.add('burst-petal');
+                    p.innerHTML = '🌸';
+                    const angle = Math.random() * 360;
+                    const distance = Math.random() * 150 + 50;
+                    p.style.setProperty('--x', `${Math.cos(angle * Math.PI / 180) * distance}px`);
+                    p.style.setProperty('--y', `${Math.sin(angle * Math.PI / 180) * distance}px`);
+                    p.style.setProperty('--rot', Math.random() * 2 - 1);
+                    sakuraBurst.appendChild(p);
+                    setTimeout(() => p.remove(), 800);
+                }
+            }
+
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            prizeTrigger.addEventListener('click', openPrizeModal);
+            closePrizeBtn.addEventListener('click', closePrizeModal);
+            prizeModal.addEventListener('click', (e) => { if (e.target === prizeModal) closePrizeModal(); });
+
+            setupSlider();
+            setInterval(createPetal, 300);
+        });
+    </script>
+</body>
+</html>

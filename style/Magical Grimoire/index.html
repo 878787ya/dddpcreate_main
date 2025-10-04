@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>A Magical Grimoire</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (魔法書卷風格) --- */
+        :root {
+            --bg-color: #1A1225; /* 深紫色背景 */
+            --primary-color: #D4AF37; /* 魔法金 */
+            --secondary-color: #4A0D66; /* 神秘紫 */
+            --accent-color: #8B4513; /* 書皮棕 */
+            --text-color: #EAE6F0;
+            --modal-bg: #F5F1E9; /* 羊皮紙色 */
+            --modal-text-color: #3D3222;
+            --font-title: 'MedievalSharp', cursive;
+            --font-body: 'Noto Serif TC', serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: radial-gradient(ellipse at center, #3c2f4f, var(--bg-color));
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景動畫容器 (魔法粒子) --- */
+        #magic-particles-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .particle {
+            position: absolute; bottom: -20px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            animation: floatUp linear forwards;
+            filter: blur(1px);
+        }
+        .rune {
+            position: absolute; font-family: sans-serif;
+            color: var(--primary-color);
+            animation: fadeInOut 5s infinite ease-in-out;
+            opacity: 0;
+        }
+
+        /* --- 主畫面 --- */
+        .main-screen { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; padding: 20px; text-align: center; }
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 3.5rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--secondary-color);
+            margin-bottom: 30px;
+            animation: fadeIn 2s ease-out;
+        }
+
+        /* --- 魔法書互動區 --- */
+        .grimoire-wrapper { cursor: pointer; width: 250px; height: 250px; margin-bottom: 30px; position: relative; -webkit-tap-highlight-color: transparent; }
+        .grimoire-wrapper:hover { transform: scale(1.05); }
+        .grimoire-svg { width: 100%; height: 100%; overflow: visible; animation: floating 4s infinite ease-in-out; }
+        .gem { animation: pulse 2s infinite ease-in-out; }
+
+        .instruction-text { font-size: 1.1rem; color: #aaa; margin-bottom: 20px; }
+        .open-button {
+            background-color: transparent; color: var(--primary-color);
+            border: 2px solid var(--primary-color); padding: 15px 40px; font-size: 1.5rem;
+            border-radius: 2px; font-family: var(--font-title);
+            letter-spacing: 2px; cursor: pointer;
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+            transition: all B0.2s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { background-color: var(--primary-color); color: var(--bg-color); box-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+        
+        .page-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: #444; z-index: 5; }
+        
+        /* --- 開啟特效 (魔力釋放) --- */
+        #magic-burst-effect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; opacity: 0; background: radial-gradient(circle, rgba(255, 230, 150, 0.8) 0%, rgba(212, 175, 55, 0) 60%); transform: scale(0); transition: all 0.6s ease-out; }
+        #magic-burst-effect.active { opacity: 1; transform: scale(2); }
+
+        /* --- 主 Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(26, 18, 37, 0.8); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.5s 0.2s, visibility 0.5s 0.2s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); color: var(--modal-text-color);
+            border: 10px solid transparent;
+            border-image: url('data:image/svg+xml;charset=UTF-8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><path d="M0 10 L10 0 L90 0 L100 10 V90 L90 100 H10 L0 90Z" stroke="%23D4AF37" stroke-width="2" fill="none"/><circle cx="5" cy="5" r="2" fill="%23D4AF37"/><circle cx="95" cy="5" r="2" fill="%23D4AF37"/><circle cx="5" cy="95" r="2" fill="%23D4AF37"/><circle cx="95" cy="95" r="2" fill="%23D4AF37"/></svg>') 10;
+            width: 100%; max-width: 400px;
+            padding: 40px 25px 30px; position: relative; text-align: center;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            transform: scale(0.9); transition: transform 0.4s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 2rem; color: #aaa; background: none; border: none; cursor: pointer; line-height: 1; padding: 5px; z-index: 10; transition: color 0.2s; }
+        .close-btn:hover { color: var(--primary-color); }
+        .modal-title { font-family: var(--font-title); color: #8B4513; font-size: 2.5rem; margin-bottom: 20px; }
+        /* 圖片輪播 */
+        .slider-container { border: 1px solid #ddd; }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 20px; position: relative; background-color: #fff; }
+        .slides-wrapper { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav { background-color: rgba(255, 255, 255, 0.7); color: #333; position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .slider-nav:hover { background-color: white; }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        .caption-container { font-size: 1.1rem; color: #8B4513; min-height: 2.4em; line-height: 1.4; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.8; color: #555; }
+
+        /* --- 兌換獎品魔藥 --- */
+        .prize-trigger { position: absolute; bottom: 20px; right: 20px; width: 60px; height: 60px; cursor: pointer; z-index: 15; transition: transform 0.2s; }
+        .prize-trigger:hover { transform: scale(1.1); }
+        .prize-trigger svg { filter: drop-shadow(0 0 5px var(--primary-color)); animation: floating 3s infinite ease-in-out 1s; }
+
+        /* --- 兌換獎品 Modal --- */
+        #prize-modal-overlay { z-index: 200; background-color: rgba(0,0,0,0.9); }
+        .prize-modal-content { padding: 40px 30px; }
+        .prize-qr-code { width: 100%; max-width: 200px; height: auto; border: 1px solid #555; padding: 5px; margin-bottom: 20px; background: white; }
+        .prize-text { font-size: 1.1rem; color: #333; line-height: 1.6; }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes floatUp { to { transform: translateY(-100vh); opacity: 0; } }
+        @keyframes fadeInOut { 0%,100%{opacity:0} 50%{opacity:0.3} }
+        @keyframes floating { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse { 0%,100%{filter: drop-shadow(0 0 8px var(--primary-color))} 50%{filter: drop-shadow(0 0 20px var(--primary-color))} }
+
+        @media (max-width: 600px) { .main-title { font-size: 2.8rem; } .grimoire-wrapper { width: 220px; height: 220px; } }
+    </style>
+</head>
+<body>
+
+    <div id="magic-particles-container"></div>
+    <div id="magic-burst-effect"></div>
+
+    <main class="main-screen">
+        <h1 class="main-title">A Magical Grimoire</h1>
+
+        <div class="grimoire-wrapper" id="triggerGift" role="button" aria-label="打開魔法書">
+            <svg class="grimoire-svg" viewBox="0 0 200 200">
+                <defs><filter id="book-shadow"><feDropShadow dx="5" dy="10" stdDeviation="8" flood-color="#000" flood-opacity="0.5"/></filter></defs>
+                <g class="grimoire-group" filter="url(#book-shadow)">
+                    <!-- 書本 -->
+                    <rect x="20" y="20" width="160" height="180" rx="10" fill="var(--accent-color)"/>
+                    <rect x="20" y="20" width="50" height="180" fill="#654321"/>
+                    <!-- 裝飾 -->
+                    <path d="M25 25 H65 V195 H25Z" fill="none" stroke="var(--primary-color)" stroke-width="2"/>
+                    <circle cx="90" cy="40" r="5" fill="var(--primary-color)"/>
+                    <circle cx="170" cy="40" r="5" fill="var(--primary-color)"/>
+                    <circle cx="90" cy="180" r="5" fill="var(--primary-color)"/>
+                    <circle cx="170" cy="180" r="5" fill="var(--primary-color)"/>
+                    <!-- 中央寶石 -->
+                    <g class="gem">
+                        <path d="M130 90 L110 110 L130 130 L150 110 Z" fill="#4A0D66"/>
+                        <path d="M130 90 L120 100 H140 Z" fill="#A355FF"/>
+                    </g>
+                </g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 觸碰書本，解開封印 ↓</p>
+        <button class="open-button" id="triggerBtn">Unlock</button>
+    </main>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <!-- 主 Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">Our Chapter</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>親愛的，<br><br>這本魔法書記載著我們的專屬咒語，<br>那就是一起創造的閃亮回憶。<br>願我們的故事，篇章永續。✨</p></div>
+            
+            <div class="prize-trigger" id="prizeTrigger">
+                <svg viewBox="0 0 100 120"><path d="M50 0 L70 20 H30 Z" fill="#C0C0C0"/><path d="M50 10 C 20 10, 20 50, 50 50 S 80 10, 50 10" fill="#A355FF"/><rect x="45" y="40" width="10" height="70" fill="#D8B9FF"/><path d="M20 110 H80 V120 H20 Z" fill="#C0C0C0"/></svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 兌換獎品 Modal -->
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal-content prize-modal-content">
+            <button class="close-btn" id="closePrizeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">Magic Potion</h2>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MagicPotion" alt="兌換憑證" class="prize-qr-code">
+            <p class="prize-text">憑此畫面可兌換<br><strong>「一杯特調的快樂魔藥」</strong><br>（又名：你最愛的飲料）！</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryItems = [
+                { src: "https://picsum.photos/id/10/800/600", caption: "Chapter I: The Adventure Begins." },
+                { src: "https://picsum.photos/id/20/800/600", caption: "Chapter II: A Mysterious Encounter."},
+                { src: "https://picsum.photos/id/30/800/600", caption: "Chapter III: To Be Continued..." },
+            ];
+
+            const giftWrapper = document.getElementById('triggerGift'), openBtn = document.getElementById('triggerBtn'), modal = document.getElementById('modal'), closeBtn = document.getElementById('closeBtn'), particlesContainer = document.getElementById('magic-particles-container'), magicBurst = document.getElementById('magic-burst-effect'), slidesWrapper = document.getElementById('slidesWrapper'), captionEl = document.getElementById('caption'), prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), prizeTrigger = document.getElementById('prizeTrigger'), prizeModal = document.getElementById('prizeModal'), closePrizeBtn = document.getElementById('closePrizeBtn');
+            let currentSlide = 0;
+
+            function setupSlider() { slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="Magic Photo"></div>`).join(''); showSlide(0); }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+            function openModal() {
+                triggerMagicBurst();
+                setTimeout(() => { modal.classList.add('active'); showSlide(0); }, 300);
+            }
+            function closeModal() { modal.classList.remove('active'); }
+            function openPrizeModal() { prizeModal.classList.add('active'); }
+            function closePrizeModal() { prizeModal.classList.remove('active'); }
+
+            function createMagicParticle() {
+                const particle = document.createElement('div');
+                if (Math.random() > 0.1) {
+                    particle.classList.add('particle');
+                    const size = Math.random() * 2 + 1;
+                    particle.style.width = `${size}px`; particle.style.height = `${size}px`;
+                } else {
+                    const runes = ['✧', '✦', '✳', '✴', '✺'];
+                    particle.classList.add('rune');
+                    particle.innerText = runes[Math.floor(Math.random() * runes.length)];
+                    particle.style.fontSize = `${Math.random() * 10 + 15}px`;
+                    particle.style.top = Math.random() * 100 + 'vh';
+                }
+                particle.style.left = Math.random() * 100 + 'vw';
+                const duration = Math.random() * 10 + 8;
+                particle.style.animationDuration = `${duration}s`;
+                particlesContainer.appendChild(particle);
+                setTimeout(() => particle.remove(), duration * 1000);
+            }
+
+            function triggerMagicBurst() {
+                magicBurst.classList.add('active');
+                setTimeout(() => {
+                    magicBurst.style.opacity = '0';
+                    setTimeout(() => {
+                        magicBurst.classList.remove('active');
+                        magicBurst.style.opacity = '';
+                    }, 600);
+                }, 100);
+            }
+
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            prizeTrigger.addEventListener('click', openPrizeModal);
+            closePrizeBtn.addEventListener('click', closePrizeModal);
+            prizeModal.addEventListener('click', (e) => { if (e.target === prizeModal) closePrizeModal(); });
+
+            setupSlider();
+            setInterval(createMagicParticle, 400);
+        });
+    </script>
+</body>
+</html>

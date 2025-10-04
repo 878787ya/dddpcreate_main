@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>INCOMING TRANSMISSION</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (賽博龐克風格) --- */
+        :root {
+            --bg-color: #000000;
+            --primary-color: #FF00FF; /* 洋紅 */
+            --secondary-color: #00FFFF; /* 青色 */
+            --accent-color: #FFFF00; /* 黃色 */
+            --text-color: #E0E0E0;
+            --modal-bg: rgba(10, 10, 20, 0.9);
+            --font-title: 'Orbitron', sans-serif;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+            cursor: crosshair;
+        }
+
+        /* --- 背景動畫容器 (數位雨) --- */
+        #digital-rain-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+        /* --- 主畫面 --- */
+        .main-screen { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; padding: 20px; text-align: center; }
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color), 0 0 20px var(--secondary-color);
+            margin-bottom: 40px;
+            animation: text-flicker 3s infinite linear;
+            letter-spacing: 2px;
+        }
+
+        /* --- 數據方塊互動區 --- */
+        .datacube-wrapper { cursor: pointer; width: 200px; height: 200px; margin-bottom: 30px; position: relative; -webkit-tap-highlight-color: transparent; perspective: 1000px; }
+        .datacube {
+            width: 100%; height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotate-cube 10s infinite linear;
+        }
+        .face {
+            position: absolute;
+            width: 200px; height: 200px;
+            border: 2px solid var(--secondary-color);
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        .front  { transform: rotateY(  0deg) translateZ(100px); }
+        .back   { transform: rotateY(180deg) translateZ(100px); }
+        .right  { transform: rotateY( 90deg) translateZ(100px); }
+        .left   { transform: rotateY(-90deg) translateZ(100px); }
+        .top    { transform: rotateX( 90deg) translateZ(100px); }
+        .bottom { transform: rotateX(-90deg) translateZ(100px); }
+
+        .instruction-text { font-size: 1rem; color: #888; margin-bottom: 20px; }
+        .open-button {
+            background-color: transparent; color: var(--accent-color);
+            border: 2px solid var(--accent-color); padding: 15px 40px; font-size: 1.2rem;
+            border-radius: 0; font-family: var(--font-title);
+            letter-spacing: 3px; cursor: pointer;
+            text-shadow: 0 0 5px var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-color), inset 0 0 10px var(--accent-color);
+            transition: all 0.2s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { background-color: var(--accent-color); color: var(--bg-color); box-shadow: 0 0 20px var(--accent-color), inset 0 0 5px var(--accent-color); }
+        
+        .page-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: #333; z-index: 5; }
+        
+        /* --- Glitch 特效 --- */
+        .glitch-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 999;
+            opacity: 0;
+            background: var(--bg-color);
+        }
+        .glitch-overlay.active { opacity: 1; animation: glitch-anim 0.5s steps(2, end) forwards; }
+        .glitch-overlay::before, .glitch-overlay::after {
+            content: ''; position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: inherit;
+        }
+        .glitch-overlay.active::before { animation: glitch-top 0.5s linear forwards; clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%); }
+        .glitch-overlay.active::after { animation: glitch-bottom 0.5s linear forwards; clip-path: polygon(0 66%, 100% 66%, 100% 100%, 0 100%); }
+
+        /* --- 主 Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.5s 0.3s, visibility 0.5s 0.3s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); color: var(--text-color);
+            border: 1px solid var(--primary-color);
+            width: 100%; max-width: 400px;
+            padding: 40px 25px 30px; position: relative; text-align: center;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+            transform: scale(0.9); transition: transform 0.4s 0.3s ease-out;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 2rem; color: #555; background: none; border: none; cursor: pointer; line-height: 1; padding: 5px; z-index: 10; transition: color 0.2s; }
+        .close-btn:hover { color: var(--primary-color); }
+        .modal-title { font-family: var(--font-title); color: var(--primary-color); font-size: 2rem; margin-bottom: 20px; }
+        /* 圖片輪播 */
+        .slider-container { border: 1px solid #333; }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 20px; position: relative; background-color: #000; }
+        .slides-wrapper { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav { background-color: rgba(0, 255, 255, 0.5); color: #000; position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 0; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .slider-nav:hover { background-color: var(--secondary-color); }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 0; } #nextBtn { right: 0; }
+        .caption-container { font-size: 1rem; color: #888; min-height: 2.4em; line-height: 1.4; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.8; color: #ccc; }
+
+        /* --- 兌換獎品晶片 --- */
+        .prize-trigger { position: absolute; bottom: 20px; right: 20px; width: 60px; height: 60px; cursor: pointer; z-index: 15; transition: transform 0.2s; }
+        .prize-trigger:hover { transform: scale(1.1); }
+        .prize-trigger svg { filter: drop-shadow(0 0 5px var(--accent-color)); animation: pulse 2s infinite ease-in-out; }
+
+        /* --- 兌換獎品 Modal --- */
+        #prize-modal-overlay { z-index: 200; background-color: rgba(0,0,0,0.9); }
+        .prize-modal-content { padding: 40px 30px; border-color: var(--accent-color); box-shadow: 0 0 30px rgba(255, 255, 0, 0.3); }
+        .prize-qr-code { width: 100%; max-width: 200px; height: auto; border: 1px solid #555; padding: 5px; margin-bottom: 20px; background: white; }
+        .prize-text { font-size: 1.1rem; color: #ccc; line-height: 1.6; }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes rotate-cube { from { transform: rotateY(0) rotateX(0); } to { transform: rotateY(360deg) rotateX(360deg); } }
+        @keyframes text-flicker { 0%, 100% { opacity: 1; } 2%, 8% { opacity: 0.5; } 4% { opacity: 1; } 6% { opacity: 0.2; } }
+        @keyframes glitch-anim { 0% { opacity: 1; transform: translate(0, 0); } 100% { opacity: 0; transform: translate(0, 0); } }
+        @keyframes glitch-top { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-8px); } 80% { transform: translateX(8px); } }
+        @keyframes glitch-bottom { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(5px); } 40% { transform: translateX(-5px); } 60% { transform: translateX(8px); } 80% { transform: translateX(-8px); } }
+        @keyframes pulse { 0%,100%{filter: drop-shadow(0 0 5px var(--accent-color))} 50%{filter: drop-shadow(0 0 15px var(--accent-color))} }
+        
+        @media (max-width: 600px) { .main-title { font-size: 2rem; } .datacube-wrapper { width: 150px; height: 150px; } .face { width: 150px; height: 150px; } .front, .back { transform: rotateY(var(--rotY)) translateZ(75px); } .right { transform: rotateY(90deg) translateZ(75px); } .left { transform: rotateY(-90deg) translateZ(75px); } .top { transform: rotateX(90deg) translateZ(75px); } .bottom { transform: rotateX(-90deg) translateZ(75px); } }
+    </style>
+</head>
+<body>
+
+    <canvas id="digital-rain-canvas"></canvas>
+    <div class="glitch-overlay" id="glitchEffect"></div>
+
+    <main class="main-screen">
+        <h1 class="main-title">&gt; INCOMING<br>&gt; TRANSMISSION</h1>
+
+        <div class="datacube-wrapper" id="triggerGift" role="button" aria-label="解碼數據">
+            <div class="datacube">
+                <div class="face front"></div>
+                <div class="face back"></div>
+                <div class="face right"></div>
+                <div class="face left"></div>
+                <div class="face top"></div>
+                <div class="face bottom"></div>
+            </div>
+        </div>
+
+        <p class="instruction-text">↓ 點擊數據方塊進行解碼 ↓</p>
+        <button class="open-button" id="triggerBtn">DECRYPT</button>
+    </main>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <!-- 主 Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">MEMORY FILE</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>親愛的，<br><br>即使在數據洪流中，<br>我們的共同記憶也如星辰般永恆。<br>這份檔案，專屬於你。- 終端機</p></div>
+            
+            <div class="prize-trigger" id="prizeTrigger">
+                <svg viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" fill="#333" stroke="#FFFF00" stroke-width="2"/><rect x="40" y="0" width="20" height="100" fill="#FFFF00"/><rect x="0" y="40" width="100" height="20" fill="#FFFF00"/><circle cx="50" cy="50" r="10" fill="#333"/></svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 兌換獎品 Modal -->
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal-content prize-modal-content">
+            <button class="close-btn" id="closePrizeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">ACCESS GRANTED</h2>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=CyberpunkPrize" alt="兌換憑證" class="prize-qr-code">
+            <p class="prize-text">SCAN TO REDEEM ONE<br><strong>"ENERGY DRINK"</strong><br>FOR YOUR NEXT MISSION.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryItems = [
+                { src: "https://picsum.photos/id/1/800/600", caption: "File_01: Connection Established." },
+                { src: "https://picsum.photos/id/10/800/600", caption: "File_02: Exploring the Grid."},
+                { src: "https://picsum.photos/id/100/800/600", caption: "File_03: System Reboot..." },
+            ];
+
+            const giftWrapper = document.getElementById('triggerGift'), openBtn = document.getElementById('triggerBtn'), modal = document.getElementById('modal'), closeBtn = document.getElementById('closeBtn'), glitchEffect = document.getElementById('glitchEffect'), slidesWrapper = document.getElementById('slidesWrapper'), captionEl = document.getElementById('caption'), prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), prizeTrigger = document.getElementById('prizeTrigger'), prizeModal = document.getElementById('prizeModal'), closePrizeBtn = document.getElementById('closePrizeBtn');
+            let currentSlide = 0;
+
+            // --- 數位雨 Canvas ---
+            const canvas = document.getElementById('digital-rain-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+            const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const nums = '0123456789';
+            const alphabet = katakana + latin + nums;
+            const fontSize = 16;
+            const columns = canvas.width / fontSize;
+            const rainDrops = [];
+            for (let x = 0; x < columns; x++) { rainDrops[x] = 1; }
+
+            const drawRain = () => {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#0F0';
+                ctx.font = fontSize + 'px monospace';
+                for (let i = 0; i < rainDrops.length; i++) {
+                    const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                    ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+                    if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        rainDrops[i] = 0;
+                    }
+                    rainDrops[i]++;
+                }
+            };
+            setInterval(drawRain, 30);
+            
+            // --- 核心功能 ---
+            function setupSlider() { slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="Memory File"></div>`).join(''); showSlide(0); }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+            function openModal() {
+                triggerGlitch();
+                setTimeout(() => { modal.classList.add('active'); showSlide(0); }, 300);
+            }
+            function closeModal() { modal.classList.remove('active'); }
+            function openPrizeModal() { prizeModal.classList.add('active'); }
+            function closePrizeModal() { prizeModal.classList.remove('active'); }
+
+            function triggerGlitch() {
+                glitchEffect.classList.add('active');
+                setTimeout(() => glitchEffect.classList.remove('active'), 500);
+            }
+
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            prizeTrigger.addEventListener('click', openPrizeModal);
+            closePrizeBtn.addEventListener('click', closePrizeModal);
+            prizeModal.addEventListener('click', (e) => { if (e.target === prizeModal) closePrizeModal(); });
+
+            setupSlider();
+        });
+    </script>
+</body>
+</html>

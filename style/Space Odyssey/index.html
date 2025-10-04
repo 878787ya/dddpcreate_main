@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Our Space Odyssey</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS 變數定義 (太空風格) --- */
+        :root {
+            --bg-color: #0A0A1A; /* 深空黑 */
+            --primary-color: #00F5FF; /* 青色光暈 */
+            --secondary-color: #A355FF; /* 紫色星雲 */
+            --text-color: #E0E0E0;
+            --modal-bg: rgba(10, 10, 30, 0.9);
+            --font-title: 'Orbitron', sans-serif;
+            --font-body: 'Noto Sans TC', sans-serif;
+        }
+
+        /* --- 基礎設定 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html {
+            height: 100%; min-height: 100dvh; 
+            font-family: var(--font-body);
+            background: radial-gradient(ellipse at bottom, #1e1e3f, var(--bg-color));
+            color: var(--text-color);
+            overflow: hidden; position: relative;
+        }
+
+        /* --- 背景動畫容器 (星空) --- */
+        #starfield-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .star {
+            position: absolute; background-color: white; border-radius: 50%;
+            animation: twinkle 2s infinite alternate ease-in-out;
+        }
+        .shooting-star {
+            position: absolute; background: linear-gradient(-45deg, white, rgba(255,255,255,0));
+            width: 80px; height: 1px;
+            filter: drop-shadow(0 0 6px white);
+            animation: shoot linear forwards;
+        }
+
+        /* --- 主畫面 --- */
+        .main-screen { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100dvh; padding: 20px; text-align: center; }
+        .main-title {
+            font-family: var(--font-title);
+            font-size: 3rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color), 0 0 20px var(--secondary-color);
+            margin-bottom: 40px;
+            animation: fadeIn 2s ease-out;
+            letter-spacing: 2px;
+        }
+
+        /* --- 太空艙互動區 --- */
+        .pod-wrapper { cursor: pointer; width: 220px; height: 220px; margin-bottom: 30px; position: relative; -webkit-tap-highlight-color: transparent; }
+        .pod-wrapper:hover { transform: scale(1.05); }
+        .pod-svg { width: 100%; height: 100%; overflow: visible; animation: floating 4s infinite ease-in-out; }
+
+        .instruction-text { font-size: 1rem; color: #888; margin-bottom: 20px; }
+        .open-button {
+            background-color: transparent; color: var(--primary-color);
+            border: 2px solid var(--primary-color); padding: 15px 40px; font-size: 1.2rem;
+            border-radius: 5px; font-family: var(--font-title);
+            letter-spacing: 3px; cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-color), inset 0 0 10px var(--primary-color);
+            transition: all 0.2s ease-in-out;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .open-button:hover { background-color: var(--primary-color); color: var(--bg-color); box-shadow: 0 0 20px var(--primary-color), inset 0 0 5px var(--primary-color); }
+        
+        .page-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; font-size: 0.8rem; color: #333; z-index: 5; }
+        
+        /* --- 曲速飛行特效 --- */
+        #hyperspace-effect { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; opacity: 0; }
+        #hyperspace-effect.active { opacity: 1; }
+        .warp-star { position: absolute; top: 50%; left: 50%; width: 2px; height: 200px; background: linear-gradient(to bottom, transparent, white); animation: warp-speed 0.8s ease-in forwards; }
+        
+        /* --- 主 Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(10, 10, 30, 0.8); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 100; opacity: 0; visibility: hidden;
+            transition: opacity 0.5s 0.3s, visibility 0.5s 0.3s; padding: 20px;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background-color: var(--modal-bg); color: var(--text-color);
+            border: 1px solid var(--primary-color);
+            width: 100%; max-width: 400px; border-radius: 5px;
+            padding: 40px 25px 30px; position: relative; text-align: center;
+            box-shadow: 0 0 30px rgba(0, 245, 255, 0.3);
+            transform: scale(0.9); transition: transform 0.4s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 2rem; color: #555; background: none; border: none; cursor: pointer; line-height: 1; padding: 5px; z-index: 10; transition: color 0.2s; }
+        .close-btn:hover { color: var(--primary-color); }
+        .modal-title { font-family: var(--font-title); color: var(--primary-color); font-size: 2rem; margin-bottom: 20px; }
+        /* 圖片輪播 */
+        .slider-container { border: 1px solid #333; }
+        .slider-container { width: 100%; overflow: hidden; margin-bottom: 20px; position: relative; background-color: #000; }
+        .slides-wrapper { display: flex; transition: transform 0.5s ease-in-out; }
+        .slide { flex: 0 0 100%; aspect-ratio: 4 / 3; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-nav { background-color: rgba(0, 245, 255, 0.5); color: #000; position: absolute; top: 50%; transform: translateY(-50%); border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .slider-nav:hover { background-color: var(--primary-color); }
+        .slider-nav.hidden { opacity: 0; pointer-events: none; }
+        #prevBtn { left: 10px; } #nextBtn { right: 10px; }
+        .caption-container { font-size: 1rem; color: #aaa; min-height: 2.4em; line-height: 1.4; padding: 0 10px; margin-bottom: 20px; }
+        .modal-message { font-size: 1.1rem; line-height: 1.8; color: #ccc; }
+
+        /* --- 兌換獎品水晶 --- */
+        .prize-trigger { position: absolute; bottom: 20px; right: 20px; width: 60px; height: 60px; cursor: pointer; z-index: 15; transition: transform 0.2s; }
+        .prize-trigger:hover { transform: scale(1.1); }
+        .prize-trigger svg { filter: drop-shadow(0 0 10px var(--secondary-color)); animation: floating 3s infinite ease-in-out 1s; }
+
+        /* --- 兌換獎品 Modal --- */
+        #prize-modal-overlay { z-index: 200; background-color: rgba(0,0,0,0.9); }
+        .prize-modal-content { padding: 40px 30px; border-color: var(--secondary-color); box-shadow: 0 0 30px rgba(163, 85, 255, 0.3); }
+        .prize-qr-code { width: 100%; max-width: 200px; height: auto; border: 1px solid #555; padding: 5px; margin-bottom: 20px; background: white; }
+        .prize-text { font-size: 1.1rem; color: #ccc; line-height: 1.6; }
+
+        /* --- 動畫 Keyframes --- */
+        @keyframes twinkle { from { opacity: 0.5; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        @keyframes shoot { from { transform: translateX(0) translateY(0) rotate(-45deg); opacity: 1; } to { transform: translateX(100vw) translateY(100vw) rotate(-45deg); opacity: 0; } }
+        @keyframes floating { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-15px) rotate(5deg)} }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes warp-speed { from { transform: rotate(var(--angle)) scaleY(0); } to { transform: rotate(var(--angle)) scaleY(10); } }
+
+        @media (max-width: 600px) { .main-title { font-size: 2.5rem; } .pod-wrapper { width: 180px; height: 180px; } }
+    </style>
+</head>
+<body>
+
+    <div id="starfield-container"></div>
+    <div id="hyperspace-effect"></div>
+
+    <main class="main-screen">
+        <h1 class="main-title">Our Space Odyssey</h1>
+
+        <div class="pod-wrapper" id="triggerGift" role="button" aria-label="啟動太空艙">
+            <svg class="pod-svg" viewBox="0 0 200 200">
+                <defs><filter id="glow"><feGaussianBlur stdDeviation="3.5" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+                <g class="pod-body">
+                    <path d="M50 150 C 20 100, 20 80, 100 50 C 180 80, 180 100, 150 150 Z" fill="#C0C0C0"/>
+                    <path d="M50 150 Q 100 180, 150 150" fill="#A9A9A9"/>
+                    <ellipse cx="100" cy="100" rx="40" ry="30" fill="var(--primary-color)" filter="url(#glow)"/>
+                    <ellipse cx="100" cy="100" rx="35" ry="25" fill="#000"/>
+                    <path d="M100 150 L120 160 H80 Z" fill="#808080"/>
+                </g>
+            </svg>
+        </div>
+
+        <p class="instruction-text">↓ 點擊太空艙，開始我們的旅程 ↓</p>
+        <button class="open-button" id="triggerBtn">ENGAGE</button>
+    </main>
+    
+    <footer class="page-footer">@dddpcreate</footer>
+
+    <!-- 主 Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">Logbook</h2>
+            <div class="slider-container">
+                <div class="slides-wrapper" id="slidesWrapper"></div>
+                <button id="prevBtn" class="slider-nav prev-btn">‹</button>
+                <button id="nextBtn" class="slider-nav next-btn">›</button>
+            </div>
+            <div id="caption" class="caption-container"></div>
+            <div class="modal-message"><p>親愛的艦長，<br><br>這是我們在浩瀚宇宙中，<br>共同航行的星際日誌。<br>願我們的旅程，永遠燦爛如星河！✨</p></div>
+            
+            <div class="prize-trigger" id="prizeTrigger">
+                <svg viewBox="0 0 100 100"><path d="M50 5 L20 40 L50 95 L80 40 Z" fill="#A355FF"/><path d="M50 5 L35 45 H65 Z" fill="#D8B9FF"/></svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 兌換獎品 Modal -->
+    <div class="modal-overlay" id="prizeModal">
+        <div class="modal-content prize-modal-content">
+            <button class="close-btn" id="closePrizeBtn" aria-label="關閉">&times;</button>
+            <h2 class="modal-title">Energy Crystal</h2>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=SpaceOdysseyPrize" alt="兌換憑證" class="prize-qr-code">
+            <p class="prize-text">Scan to redeem a<br><strong>"Recharge Drink"</strong><br>for our next adventure!</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryItems = [
+                { src: "https://picsum.photos/id/1018/800/600", caption: "Stardate 1: Our voyage begins." },
+                { src: "https://picsum.photos/id/1041/800/600", caption: "Stardate 2: Discovered a new nebula."},
+                { src: "https://picsum.photos/id/1079/800/600", caption: "Stardate 3: The journey continues." },
+            ];
+
+            const giftWrapper = document.getElementById('triggerGift'), openBtn = document.getElementById('triggerBtn'), modal = document.getElementById('modal'), closeBtn = document.getElementById('closeBtn'), starfieldContainer = document.getElementById('starfield-container'), hyperspaceEffect = document.getElementById('hyperspace-effect'), slidesWrapper = document.getElementById('slidesWrapper'), captionEl = document.getElementById('caption'), prevBtn = document.getElementById('prevBtn'), nextBtn = document.getElementById('nextBtn'), prizeTrigger = document.getElementById('prizeTrigger'), prizeModal = document.getElementById('prizeModal'), closePrizeBtn = document.getElementById('closePrizeBtn');
+            let currentSlide = 0;
+
+            function setupSlider() { slidesWrapper.innerHTML = galleryItems.map(item => `<div class="slide"><img src="${item.src}" alt="Space Photo"></div>`).join(''); showSlide(0); }
+            function showSlide(index) {
+                if (index < 0) index = 0; if (index >= galleryItems.length) index = galleryItems.length - 1;
+                slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
+                captionEl.textContent = galleryItems[index].caption;
+                currentSlide = index;
+                prevBtn.classList.toggle('hidden', currentSlide === 0);
+                nextBtn.classList.toggle('hidden', currentSlide === galleryItems.length - 1);
+            }
+            function openModal() {
+                triggerHyperspace();
+                setTimeout(() => { modal.classList.add('active'); showSlide(0); }, 500);
+            }
+            function closeModal() { modal.classList.remove('active'); }
+            function openPrizeModal() { prizeModal.classList.add('active'); }
+            function closePrizeModal() { prizeModal.classList.remove('active'); }
+
+            function createStar() {
+                for (let i = 0; i < 100; i++) {
+                    const star = document.createElement('div');
+                    star.classList.add('star');
+                    const size = Math.random() * 2 + 1;
+                    star.style.width = `${size}px`; star.style.height = `${size}px`;
+                    star.style.top = Math.random() * 100 + '%'; star.style.left = Math.random() * 100 + '%';
+                    star.style.animationDelay = `${Math.random() * 2}s`;
+                    starfieldContainer.appendChild(star);
+                }
+            }
+            function createShootingStar() {
+                const star = document.createElement('div');
+                star.classList.add('shooting-star');
+                star.style.top = Math.random() * 50 + 'vh';
+                star.style.left = '-80px';
+                star.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                starfieldContainer.appendChild(star);
+                setTimeout(() => star.remove(), 3000);
+            }
+
+            function triggerHyperspace() {
+                hyperspaceEffect.innerHTML = ''; // Clear previous
+                for (let i = 0; i < 50; i++) {
+                    const warpStar = document.createElement('div');
+                    warpStar.classList.add('warp-star');
+                    warpStar.style.setProperty('--angle', `${Math.random() * 360}deg`);
+                    hyperspaceEffect.appendChild(warpStar);
+                }
+                hyperspaceEffect.classList.add('active');
+                setTimeout(() => {
+                    hyperspaceEffect.classList.remove('active');
+                    hyperspaceEffect.innerHTML = '';
+                }, 800);
+            }
+
+            giftWrapper.addEventListener('click', openModal);
+            openBtn.addEventListener('click', openModal);
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+            nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+            prizeTrigger.addEventListener('click', openPrizeModal);
+            closePrizeBtn.addEventListener('click', closePrizeModal);
+            prizeModal.addEventListener('click', (e) => { if (e.target === prizeModal) closePrizeModal(); });
+
+            setupSlider();
+            createStar();
+            setInterval(createShootingStar, 5000);
+        });
+    </script>
+</body>
+</html>
