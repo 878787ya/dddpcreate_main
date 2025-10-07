@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>客製化數位心意卡片 訂購</title>
+  <style>
+    body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;max-width:820px;margin:40px auto;padding:0 16px;line-height:1.65}
+    h1{margin:0 0 6px} .desc{color:#666;margin:0 0 16px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .field{margin:14px 0} label{display:block;font-weight:600;margin-bottom:6px}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:10px}
+    textarea{min-height:110px}
+    input[type="file"]{padding:10px;border:1px dashed #aaa;background:#fafafa}
+    .muted{color:#888;font-size:12px}
+    .error{color:#b00020;margin:8px 0;display:none}
+    .ok{color:#0a7a2a;margin:8px 0;display:none}
+    .upload-card{border:1px solid #e5e5e5;border-radius:12px;padding:12px;margin:12px 0;background:#fcfcfc}
+    button{padding:12px 16px;border:0;border-radius:10px;background:#111;color:#fff;font-weight:700;cursor:pointer}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .hint{font-size:12px;color:#666;margin-top:4px}
+    .check{display:flex;gap:10px;align-items:center}
+  </style>
+</head>
+<body>
+  <h1>客製化數位心意卡片 訂購</h1>
+  <p class="desc">填寫以下資訊後送出；我們將於 24 小時內以 Email 與你確認。</p>
+
+  <form id="orderForm" enctype="multipart/form-data">
+    <!-- 訂購者資訊 -->
+    <div class="grid">
+      <div class="field">
+        <label for="name">訂購者姓名/暱稱 *</label>
+        <input id="name" name="name" required />
+      </div>
+      <div class="field">
+        <label for="email">Email（聯絡用） *</label>
+        <input id="email" name="email" type="email" required />
+      </div>
+      <div class="field">
+        <label for="phone">聯絡電話（選填）</label>
+        <input id="phone" name="phone" />
+      </div>
+      <div class="field">
+        <label for="occasion">送禮場合 *</label>
+        <select id="occasion" name="occasion" required>
+          <option value="">請選擇</option>
+          <option>生日</option><option>畢業/師恩</option><option>周年/情人節</option>
+          <option>聖誕/跨年</option><option>萬聖節</option><option>農曆年/元宵/端午</option>
+          <option>其他</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 設計偏好 -->
+    <div class="grid">
+      <div class="field">
+        <label for="style">喜歡的賀卡風格 *</label>
+        <select id="style" name="style" required>
+          <option value="">請選擇</option>
+          <option>可愛風格</option><option>黑白簡約</option><option>海洋風格</option>
+          <option>叢林探險</option><option>聖誕佳節</option><option>萬聖狂歡</option>
+          <option>農曆新年</option><option>跨年派對</option><option>元宵佳節</option>
+          <option>端午安康</option><option>感念師恩</option><option>浪漫情人</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="language">呈現語言 *</label>
+        <select id="language" name="language" required>
+          <option value="">請選擇</option>
+          <option>繁體中文</option><option>英文</option><option>中英雙語</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="recipient">收禮人姓名/暱稱 *</label>
+        <input id="recipient" name="recipient" required />
+        <div class="hint">此名字會出現在主祝福文字中（如「親愛的 [小明]」）。</div>
+      </div>
+      <div class="field">
+        <label for="due">希望完成日期（選填）</label>
+        <input id="due" name="due_date" type="date" />
+      </div>
+    </div>
+
+    <!-- 內容 -->
+    <div class="field">
+      <label for="main_text">主祝福文字（建議 50–100 字） *</label>
+      <textarea id="main_text" name="main_text" required></textarea>
+    </div>
+
+    <!-- 照片張數 -->
+    <div class="grid">
+      <div class="field">
+        <label for="photo_count">想放幾張照片？（最多 20 張）*</label>
+        <select id="photo_count" name="photo_count" required></select>
+        <div class="hint">選擇後會自動生成對應的「上傳＋註解」欄位。</div>
+      </div>
+      <div class="field check">
+        <input id="consent_portfolio" name="consent_portfolio" type="checkbox" value="yes" />
+        <label for="consent_portfolio">同意完成作品匿名截圖作為作品集/範例（可不勾選）</label>
+      </div>
+    </div>
+
+    <!-- 動態上傳區 -->
+    <div id="uploads"></div>
+
+    <!-- 備註 -->
+    <div class="field">
+      <label for="notes">其他備註（選填）</label>
+      <input id="notes" name="notes" />
+    </div>
+
+    <div class="error" id="errBox"></div>
+    <button type="submit" id="btn">送出訂單</button>
+    <p class="muted">我們僅為製作與聯繫目的使用你提供的資料。</p>
+  </form>
+
+  <script>
+  const MAX_FILES = 20;
+  const FRONT_MAX_MB = 5; // 前端單檔大小限制
+
+  const countSel = document.getElementById('photo_count');
+  const uploads = document.getElementById('uploads');
+  const form = document.getElementById('orderForm');
+  const errBox = document.getElementById('errBox');
+  const btn = document.getElementById('btn');
+
+  // 產生 1~20 選項
+  for (let i=0;i<MAX_FILES;i++){
+    const opt = document.createElement('option');
+    opt.value = String(i+1);
+    opt.textContent = `${i+1} 張`;
+    countSel.appendChild(opt);
+  }
+
+  // 依張數生成 N 組「照片＋註解」
+  countSel.addEventListener('change', renderUploads);
+  function renderUploads(){
+    uploads.innerHTML = '';
+    const n = parseInt(countSel.value||'0',10);
+    for(let i=1;i<=n;i++){
+      const card = document.createElement('div');
+      card.className = 'upload-card';
+      card.innerHTML = `
+        <div class="field">
+          <label>照片 ${i}（單檔 ≤ ${FRONT_MAX_MB}MB）*</label>
+          <input type="file" name="photos[]" accept="image/*" required />
+        </div>
+        <div class="field">
+          <label>照片 ${i} 的註解（選填）</label>
+          <input name="captions[]" placeholder="想表達的話、地點或回憶點…" />
+        </div>`;
+      uploads.appendChild(card);
+    }
+  }
+  // 預設 3 張
+  countSel.value = '3'; renderUploads();
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    errBox.style.display='none'; errBox.textContent='';
+    btn.disabled = true; btn.textContent = '上傳中…';
+
+    // 前端大小檢查
+    const files = [...form.querySelectorAll('input[name="photos[]"]')].map(i=>i.files[0]).filter(Boolean);
+    for(const f of files){
+      if(f.size > FRONT_MAX_MB*1024*1024){
+        errBox.textContent = `「${f.name}」超過 ${FRONT_MAX_MB}MB。`;
+        errBox.style.display='block';
+        btn.disabled=false; btn.textContent='送出訂單';
+        return;
+      }
+    }
+
+    try{
+      const fd = new FormData(form);
+      const res = await fetch('/api/upload', {method:'POST', body:fd});
+      if(!res.ok) throw new Error(await res.text());
+      window.location.href = '/order/thankyou.html';
+    }catch(err){
+      errBox.textContent = err.message || '上傳失敗，請稍後再試';
+      errBox.style.display='block';
+    }finally{
+      btn.disabled=false; btn.textContent='送出訂單';
+    }
+  });
+  </script>
+</body>
+</html>
