@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>已收到訂單</title>
+
+  <!-- Google Fonts for better typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Poppins:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    /* --- CSS 變數 --- */
+    :root {
+      --primary-color: #d90429;
+      /* A strong, modern red */
+      --success-color: #28a745;
+      /* A friendly green */
+      --bg-color: #f7f8fc;
+      --card-bg-color: #ffffff;
+      --text-color: #212529;
+      --muted-text-color: #6c757d;
+      --font-heading: 'Poppins', sans-serif;
+      --font-body: 'Noto Sans TC', sans-serif;
+    }
+
+    /* --- 基本設定 --- */
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    /* --- 卡片佈局 --- */
+    .card {
+      max-width: 560px;
+      width: 100%;
+      background-color: var(--card-bg-color);
+      padding: 3rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border-top: 5px solid var(--success-color);
+    }
+    
+    /* --- 成功圖示與動畫 --- */
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      border: 4px solid var(--success-color);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 1.5rem;
+      animation: scaleUp 0.5s ease-out;
+    }
+    
+    .success-icon svg {
+      width: 40px;
+      height: 40px;
+      stroke: var(--success-color);
+      stroke-width: 5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: drawCheck 0.5s 0.5s ease-out forwards;
+    }
+
+    @keyframes scaleUp {
+      from { transform: scale(0.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* --- 文字排版 --- */
+    h1 {
+      font-family: var(--font-heading);
+      font-size: 2.5rem;
+      margin: 0 0 0.5rem;
+      color: var(--text-color);
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 2rem;
+      color: var(--muted-text-color);
+      font-size: 1.1rem;
+      line-height: 1.7;
+    }
+
+    /* --- 返回按鈕 --- */
+    a {
+      display: inline-block;
+      background-color: var(--primary-color);
+      color: #fff;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    
+    a:hover {
+      background-color: #a7031e;
+      transform: translateY(-2px);
+    }
+    
+    /* --- 響應式設計 --- */
+    @media (max-width: 600px) {
+      .card {
+        padding: 2.5rem 1.5rem;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      p {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="success-icon">
+      <svg viewBox="0 0 52 52">
+        <path d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+      </svg>
+    </div>
+    <h1>謝謝你！</h1>
+    <p>我們已收到你的訂單，會在 24 小時內透過 Email 與你確認細節。</p>
+    <a href="/order/">← 返回訂購頁</a>
+  </div>
+</body>
+
+</html>
