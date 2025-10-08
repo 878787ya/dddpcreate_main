@@ -430,11 +430,11 @@
         card.innerHTML = `
           <div class="field">
             <label>照片 ${i}（單檔 ≤ ${FRONT_MAX_MB}MB）*</label>
-            <input type="file" name="photos[]" accept="image/*,.heic,.heif" required />
+            <input type="file" name="photos" accept="image/*,.heic,.heif" required />
           </div>
           <div class="field">
             <label>照片 ${i} 的註解（選填）</label>
-            <input name="captions[]" placeholder="想表達的話、地點或回憶點…" />
+            <input name="captions" placeholder="想表達的話、地點或回憶點…" />
           </div>`;
         uploads.appendChild(card);
       }
@@ -450,3 +450,4 @@
 </body>
 
 </html>
+
