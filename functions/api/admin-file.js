@@ -14,7 +14,7 @@ export const onRequestGet = async ({ request, env }) => {
   const headers = new Headers();
   const ct = obj.httpMetadata?.contentType || 'application/octet-stream';
   headers.set('content-type', ct);
-  // 如需下載，可加：headers.set('content-disposition', `attachment; filename="${objectKey.split('/').pop()}"`);
+  headers.set('content-disposition', `attachment; filename="${objectKey.split('/').pop()}"`);
 
   return new Response(obj.body, { headers });
 };
