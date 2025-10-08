@@ -20,8 +20,6 @@ export const onRequestGet = async ({ request, env }) => {
 };
 
 // --- Helper Functions ---
-
-// 根據姓名產生一個固定的、好看的顏色
 function getColorForName(name) {
   const colors = [
     '#e53935', '#d81b60', '#8e24aa', '#5e35b1', '#3949ab',
@@ -40,7 +38,6 @@ function safeParseJSON(s, d){ try{return JSON.parse(s);}catch{ return d; } }
 function escapeHtml(s){ return s ? s.replace(/[&<>"']/g,(c)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])) : ''; }
 
 // --- HTML Rendering ---
-
 function renderHTML(rows, key) {
   const items = rows.map((r, index) => {
     const photos = safeParseJSON(r.photo_entries, []);
@@ -48,13 +45,16 @@ function renderHTML(rows, key) {
     const nameColor = getColorForName(r.name);
 
     const thumbs = photos.map((p) => {
-      const src = `/api/admin-file?k=${encodeURIComponent(p.key)}&key=${encodeURIComponent(key)}`;
+      const imgSrc = `/api/admin-file?k=${encodeURIComponent(p.key)}&key=${encodeURIComponent(key)}`;
+      // 新增：為單張圖片加上下載連結，並附帶 download 屬性
+      const downloadHref = `${imgSrc}&download=1&filename=${encodeURIComponent(p.filename)}`;
       const cap = escapeHtml(p.caption || '');
-      return `<figure><img src="${src}" loading="lazy" alt="${cap}"><figcaption>${cap}</figcaption></figure>`;
+      return `<figure>
+        <img src="${imgSrc}" loading="lazy" alt="${cap}">
+        <figcaption>${cap}</figcaption>
+        <a href="${downloadHref}" class="single-download" download>下載</a>
+      </figure>`;
     }).join('');
-
-    // 下載連結指向新的 ZIP API，並傳遞訂單 ID 和順序編號
-    const downloadUrl = `/api/admin-zip?id=${r.id}&n=${orderNumber}&key=${encodeURIComponent(key)}`;
 
     return `
     <article class="card">
@@ -66,7 +66,6 @@ function renderHTML(rows, key) {
             <span>送給</span>
             <strong>${escapeHtml(r.recipient)}</strong>
           </div>
-          <a href="${downloadUrl}" class="download-btn" title="下載此訂單的所有圖片">下載 ZIP</a>
         </header>
         <div class="meta-grid">
           <div><label>訂單編號</label><span>${r.id}</span></div>
@@ -82,52 +81,33 @@ function renderHTML(rows, key) {
   }).join('');
 
   return `<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>訂單清單</title>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>訂單清單</title>
 <style>
   :root { --fg: #212529; --muted: #6c757d; --border: #dee2e6; --bg: #f8f9fa; --accent: #007bff; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; max-width: 1200px; margin: 2rem auto; padding: 0 1rem; color: var(--fg); background-color: #fff; }
   h1 { margin: 0 0 1rem; }
   .topbar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
   .muted { color: var(--muted); font-size: 0.9rem; }
-  
   .card { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 16px; margin: 1.5rem 0; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
   .details { padding: 1.5rem; }
-  
   .card-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
   .order-number { font-size: 1rem; font-weight: 700; background-color: var(--bg); color: var(--muted); padding: 0.25rem 0.75rem; border-radius: 2rem; }
   .main-info { font-size: 1.25rem; flex-grow: 1; }
   .main-info span { font-size: 1rem; color: var(--muted); margin: 0 0.25rem; }
-  
-  .download-btn { display: inline-block; background-color: var(--accent); color: #fff; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500; font-size: 0.9rem; transition: background-color 0.2s; }
-  .download-btn:hover { background-color: #0056b3; }
-  
   .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
   .meta-grid > div { display: flex; flex-direction: column; }
   .meta-grid label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.25rem; }
   .meta-grid span { font-weight: 500; word-break: break-all; }
-  
   .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; background-color: var(--bg); padding: 1.5rem; border-top: 1px solid var(--border); }
   .no-photos { color: var(--muted); }
-  figure { margin: 0; border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem; background: #fff; }
+  figure { margin: 0; border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem; background: #fff; position: relative; }
   img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; display: block; }
   figcaption { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; white-space: pre-wrap; word-break: break-word; }
-
-  @media (max-width: 768px) {
-    body { margin: 1rem auto; }
-    .topbar, .card-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-  }
+  .single-download { position: absolute; top: 1.25rem; right: 1.25rem; background-color: rgba(0,0,0,0.5); color: white; text-decoration: none; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; transition: background-color 0.2s; }
+  .single-download:hover { background-color: rgba(0,0,0,0.8); }
+  @media (max-width: 768px) { body { margin: 1rem auto; } .topbar, .card-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; } }
 </style>
-</head>
-<body>
-  <div class="topbar">
-    <h1>訂單清單</h1>
-    <div class="muted">僅供內部檢視 · 最近 ${rows.length} 筆訂單</div>
-  </div>
-  ${items || '<p class="muted">目前沒有資料</p>'}
-</body>
-</html>`;
+</head><body><div class="topbar"><h1>訂單清單</h1><div class="muted">僅供內部檢視 · 最近 ${rows.length} 筆訂單</div></div>
+${items || '<p class="muted">目前沒有資料</p>'}
+</body></html>`;
 }
