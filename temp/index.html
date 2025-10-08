@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>網站編輯入口</title>
     <style>
-        /* 使用 Google Fonts 引入 Fira Code 字體，它支援連字，看起來更像程式碼編輯器 */
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
-
         body {
-            background-color: #1e1e1e; /* VS Code 暗色背景 */
-            color: #d4d4d4; /* 預設文字顏色 */
+            background-color: #1e1e1e;
+            color: #d4d4d4;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0;
             padding: 2em;
@@ -28,34 +26,30 @@
         p {
             color: #a0a0a0;
         }
-        /* 模擬程式碼編輯器的區塊 */
         pre {
-            background-color: #252526; /* 編輯器內部顏色 */
+            background-color: #252526;
             border: 1px solid #333;
             border-radius: 5px;
             padding: 20px;
             font-size: 1em;
             line-height: 1.8;
-            overflow-x: auto; /* 如果內容太長，顯示水平捲軸 */
-            white-space: pre; /* 保留所有空白與換行 */
+            overflow-x: auto;
+            white-space: pre;
         }
         code {
-            /* 使用 Fira Code 或其他等寬字體 */
             font-family: 'Fira Code', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
         }
-        /* 連結樣式 - 藍色，符合程式碼高亮 */
         a {
             color: #9cdcfe;
             text-decoration: none;
+            cursor: pointer; /* 讓所有連結都顯示可點擊的手指圖示 */
         }
         a:hover {
             text-decoration: underline;
         }
-        /* 註解樣式 - 綠色，符合程式碼高亮 */
         .comment {
             color: #6A9955;
         }
-        /* 目錄結構的符號顏色 */
         .structure {
             color: #808080;
         }
@@ -65,17 +59,47 @@
 
     <div class="container">
         <h1>網站編輯入口</h1>
-        <p>這是一個暫時的導覽頁面，方便您快速前往各個正在編輯的頁面。這個頁面不會在正式上線時出現。</p>
+        <p>這是一個暫時的導覽頁面，方便您快速前往各個正在編輯或管理的頁面。這個頁面不會在正式上線時出現。</p>
 
-        <pre><code><span class="structure">/</span> <span class="comment">(repo root)</span>
+        <pre><code><span class="structure">/ (repo root)</span>
 <span class="structure">├─</span> <a href="../index.html" target="_blank">index.html</a>          <span class="comment"># 網站主頁</span>
 <span class="structure">├─</span> /blessing/
 <span class="structure">│  └─</span> <a href="../blessing/index.html" target="_blank">index.html</a>      <span class="comment"># Blessing 頁面</span>
-<span class="structure">└─</span> /order/
-<span class="structure">   ├─</span> <a href="../order/index.html" target="_blank">index.html</a>      <span class="comment"># Order 表單頁</span>
-<span class="structure">   └─</span> <a href="../order/thankyou.html" target="_blank">thankyou.html</a>   <span class="comment"># Order 感謝頁</span></code></pre>
+<span class="structure">├─</span> /order/
+<span class="structure">│  ├─</span> <a href="../order/index.html" target="_blank">index.html</a>      <span class="comment"># Order 表單頁</span>
+<span class="structure">│  └─</span> <a href="../order/thankyou.html" target="_blank">thankyou.html</a>   <span class="comment"># Order 感謝頁</span>
+<span class="structure">└─</span> /functions/
+   <span class="structure">└─</span> /api/
+      <!-- 【修改點 1】修改了 admin-list.js 的連結行為 -->
+      <span class="structure">├─</span> <a onclick="goToAdminList(event)">admin-list.js</a>   <span class="comment"># ★ 管理後台清單 (點擊後輸入金鑰)</span>
+      <span class="structure">├─</span> admin-file.js       <span class="comment"># 後台圖片讀取 API (後端)</span>
+      <span class="structure">├─</span> upload.js           <span class="comment"># 訂單上傳 API (後端)</span>
+      <span class="structure">└─</span> test.js             <span class="comment"># 測試用 API (後端)</span></code></pre>
 
     </div>
+
+    <!-- 【修改點 2】在 body 結尾處新增 JavaScript 程式碼 -->
+    <script>
+      function goToAdminList(event) {
+        // 防止連結的預設行為
+        event.preventDefault();
+        
+        // 跳出一個輸入框，讓使用者輸入密碼
+        const token = prompt("把金鑰交出來：");
+        
+        // 檢查使用者是否輸入了內容 (如果點取消會是 null)
+        if (token && token.trim() !== '') {
+          // 將輸入的 token 組合成完整的 URL
+          const url = `/api/admin-list?key=${encodeURIComponent(token.trim())}`;
+          
+          // 在新的分頁中打開這個 URL
+          window.open(url, '_blank');
+        } else {
+          // 如果使用者取消或沒輸入，可以選擇什麼都不做，或給個提示
+          // alert("未輸入金鑰。");
+        }
+      }
+    </script>
 
 </body>
 </html>
