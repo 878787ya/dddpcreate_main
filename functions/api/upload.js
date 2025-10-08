@@ -58,15 +58,17 @@ export const onRequestPost = async ({ request, env }) => {
     const id = crypto.randomUUID();
     const createdAt = new Date().toISOString();
 
+  
     await env.DB.prepare(
       `INSERT INTO orders
        (id, name, email, phone, occasion, style, recipient, main_text,
         due_date, notes, consent_portfolio, photo_count, photo_entries, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       id, name, email, phone, occasion, style, recipient, mainText,
       dueDate, notes, consentPortfolio, entries.length, JSON.stringify(entries), createdAt
     ).run();
+
 
     return json({ ok:true, id, stored: entries.length }, 200);
 
@@ -87,5 +89,6 @@ function makeKey(filename='file'){
   const ymd = new Date().toISOString().slice(0,10);
   return `uploads/${ymd}/${crypto.randomUUID()}-${clean}`;
 }
+
 
 
