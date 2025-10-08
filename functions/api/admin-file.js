@@ -14,7 +14,13 @@ export const onRequestGet = async ({ request, env }) => {
   const headers = new Headers();
   const ct = obj.httpMetadata?.contentType || 'application/octet-stream';
   headers.set('content-type', ct);
-  headers.set('content-disposition', `attachment; filename="${objectKey.split('/').pop()}"`);
+
+  // 【新增的邏輯】
+  // 如果 URL 參數中帶有 "download=1"，就設定為附件下載
+  if (url.searchParams.get('download')) {
+    const filename = url.searchParams.get('filename') || objectKey.split('/').pop();
+    headers.set('content-disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+  }
 
   return new Response(obj.body, { headers });
 };
