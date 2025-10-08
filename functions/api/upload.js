@@ -10,10 +10,9 @@ export const onRequestPost = async ({ request, env }) => {
     const style = getStr(form, 'style');
     const recipient = getStr(form, 'recipient');
     const mainText = getStr(form, 'main_text');
-    const language = getStr(form, 'language');
     const occasion = getStr(form, 'occasion');
 
-    if (!name || !email || !style || !recipient || !mainText || !language || !occasion) {
+    if (!name || !email || !style || !recipient || !mainText || !occasion) {
       return json({ error: '缺少必要欄位' }, 400);
     }
 
@@ -88,3 +87,4 @@ function makeKey(filename='file'){
   const ymd = new Date().toISOString().slice(0,10);
   return `uploads/${ymd}/${crypto.randomUUID()}-${clean}`;
 }
+
