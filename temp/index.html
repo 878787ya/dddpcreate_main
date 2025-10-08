@@ -1,14 +1,81 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.7">
-  <style type="text/css">
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網站編輯入口</title>
+    <style>
+        /* 使用 Google Fonts 引入 Fira Code 字體，它支援連字，看起來更像程式碼編輯器 */
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
+
+        body {
+            background-color: #1e1e1e; /* VS Code 暗色背景 */
+            color: #d4d4d4; /* 預設文字顏色 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 2em;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        h1 {
+            color: #d4d4d4;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+            font-weight: 400;
+        }
+        p {
+            color: #a0a0a0;
+        }
+        /* 模擬程式碼編輯器的區塊 */
+        pre {
+            background-color: #252526; /* 編輯器內部顏色 */
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 20px;
+            font-size: 1em;
+            line-height: 1.8;
+            overflow-x: auto; /* 如果內容太長，顯示水平捲軸 */
+            white-space: pre; /* 保留所有空白與換行 */
+        }
+        code {
+            /* 使用 Fira Code 或其他等寬字體 */
+            font-family: 'Fira Code', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        }
+        /* 連結樣式 - 藍色，符合程式碼高亮 */
+        a {
+            color: #9cdcfe;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        /* 註解樣式 - 綠色，符合程式碼高亮 */
+        .comment {
+            color: #6A9955;
+        }
+        /* 目錄結構的符號顏色 */
+        .structure {
+            color: #808080;
+        }
+    </style>
 </head>
 <body>
+
+    <div class="container">
+        <h1>網站編輯入口</h1>
+        <p>這是一個暫時的導覽頁面，方便您快速前往各個正在編輯的頁面。這個頁面不會在正式上線時出現。</p>
+
+        <pre><code><span class="structure">/</span> <span class="comment">(repo root)</span>
+<span class="structure">├─</span> <a href="../index.html" target="_blank">index.html</a>          <span class="comment"># 網站主頁</span>
+<span class="structure">├─</span> /blessing/
+<span class="structure">│  └─</span> <a href="../blessing/index.html" target="_blank">index.html</a>      <span class="comment"># Blessing 頁面</span>
+<span class="structure">└─</span> /order/
+<span class="structure">   ├─</span> <a href="../order/index.html" target="_blank">index.html</a>      <span class="comment"># Order 表單頁</span>
+<span class="structure">   └─</span> <a href="../order/thankyou.html" target="_blank">thankyou.html</a>   <span class="comment"># Order 感謝頁</span></code></pre>
+
+    </div>
+
 </body>
 </html>
