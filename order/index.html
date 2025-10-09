@@ -233,6 +233,19 @@
       margin-top: 1rem;
       text-align: center;
     }
+    /* --- Footer Style: Simple & Elegant --- */
+    .footer-simple {
+      text-align: center;
+      padding: 2rem 1rem;
+      margin-top: 3rem; /* 確保與上方內容有足夠間距 */
+      border-top: 1px solid #dee2e6; /* 分隔細線 */
+      color: #6c757d; /* 柔和的文字顏色 */
+      font-size: 0.9rem;
+    }
+  
+    .footer-simple p {
+      margin: 0;
+    }
 
     /* --- 響應式設計 --- */
     @media (max-width: 768px) {
@@ -335,7 +348,7 @@
         <h2>4. 其他資訊</h2>
         <div class="field">
           <label for="notes">其他備註（選填）</label>
-          <textarea id="notes" name="notes" placeholder="若有任何其他想客製化的細節或問題，都可以在這裡告訴我。"></textarea>
+          <textarea id="notes" name="notes" placeholder="有任何問題 或想要完全客製化一個你專屬的網頁都可以在這裡跟我說 或聯絡我@dddpcreate"></textarea>
         </div>
 
         <div class="field check">
@@ -448,8 +461,16 @@
     }
   </script>
 </body>
-<footer>@dddpcreate</footer>
+<footer class="footer-simple">
+  <p>&copy; <span id="current-year"></span> &middot; @dddpcreate</p>
+</footer>
+
+<script>
+  // 自動更新年份，一勞永逸
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
 </html>
+
 
 
 
