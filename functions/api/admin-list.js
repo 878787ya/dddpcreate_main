@@ -1,3 +1,5 @@
+// /functions/api/admin-list.js
+
 export const onRequestGet = async ({ request, env }) => {
   const url = new URL(request.url);
   const key = url.searchParams.get('key') || '';
@@ -6,9 +8,12 @@ export const onRequestGet = async ({ request, env }) => {
   if (!env.ADMIN_TOKEN || key !== env.ADMIN_TOKEN) {
     return new Response('Unauthorized', { status: 401 });
   }
-
+  
+  // --- 【修改點 1】更新 SQL 查詢，加入所有缺少的欄位 ---
   const rs = await env.DB.prepare(
-    `SELECT id, name, email, occasion, style, recipient, photo_count, photo_entries, created_at
+    `SELECT 
+       id, name, email, phone, occasion, style, recipient, main_text,
+       due_date, notes, consent_portfolio, photo_count, photo_entries, created_at
      FROM orders
      ORDER BY created_at DESC
      LIMIT ?`
@@ -19,95 +24,124 @@ export const onRequestGet = async ({ request, env }) => {
   return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
 };
 
-// --- Helper Functions ---
-function getColorForName(name) {
-  const colors = [
-    '#e53935', '#d81b60', '#8e24aa', '#5e35b1', '#3949ab',
-    '#1e88e5', '#039be5', '#00acc1', '#00897b', '#43a047',
-    '#7cb342', '#c0ca33', '#fdd835', '#ffb300', '#fb8c00',
-    '#f4511e', '#6d4c41', '#757575', '#546e7a'
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash % colors.length)];
-}
 
+// --- Helper Functions (輔助函式) ---
 function safeParseJSON(s, d){ try{return JSON.parse(s);}catch{ return d; } }
 function escapeHtml(s){ return s ? s.replace(/[&<>"']/g,(c)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])) : ''; }
 
-// --- HTML Rendering ---
-function renderHTML(rows, key) {
-  const items = rows.map((r, index) => {
-    const photos = safeParseJSON(r.photo_entries, []);
-    const orderNumber = index + 1;
-    const nameColor = getColorForName(r.name);
 
+// --- HTML Rendering (渲染 HTML) ---
+function renderHTML(rows, key) {
+  const items = rows.map((r) => {
+    const photos = safeParseJSON(r.photo_entries, []);
+    
+    // --- 【修改點 2】產生圖片預覽和下載按鈕的 HTML ---
     const thumbs = photos.map((p) => {
+      // 圖片預覽路徑
       const imgSrc = `/api/admin-file?k=${encodeURIComponent(p.key)}&key=${encodeURIComponent(key)}`;
-      // 新增：為單張圖片加上下載連結，並附帶 download 屬性
+      // 圖片下載路徑，加上 download=1 和原始檔名
       const downloadHref = `${imgSrc}&download=1&filename=${encodeURIComponent(p.filename)}`;
-      const cap = escapeHtml(p.caption || '');
+      const caption = escapeHtml(p.caption || '');
+
       return `<figure>
-        <img src="${imgSrc}" loading="lazy" alt="${cap}">
-        <figcaption>${cap}</figcaption>
-        <a href="${downloadHref}" class="single-download" download>下載</a>
+        <img src="${imgSrc}" loading="lazy" alt="${caption}">
+        <figcaption>${caption || '<i>(無註解)</i>'}</figcaption>
+        <a href="${downloadHref}" class="download-btn" title="下載此圖片" download>↓</a>
       </figure>`;
     }).join('');
 
+    // --- 【修改點 3】重新設計訂單卡片的 HTML 結構，並補上所有欄位 ---
     return `
     <article class="card">
-      <div class="details">
-        <header class="card-header">
-          <div class="order-number">#${orderNumber}</div>
-          <div class="main-info">
-            <strong style="color: ${nameColor};">${escapeHtml(r.name)}</strong>
-            <span>送給</span>
-            <strong>${escapeHtml(r.recipient)}</strong>
-          </div>
-        </header>
-        <div class="meta-grid">
-          <div><label>訂單編號</label><span>${r.id}</span></div>
-          <div><label>Email</label><span>${escapeHtml(r.email)}</span></div>
+      <header class="card-header">
+        <div class="main-info">
+          <strong>${escapeHtml(r.name)}</strong>
+          <span class="muted-text">( ${escapeHtml(r.email)} )</span>
+          <span>送給</span>
+          <strong>${escapeHtml(r.recipient)}</strong>
+        </div>
+        <div class="order-meta">
+          <span class="order-id">ID: ${r.id}</span>
+          <span>${escapeHtml(r.created_at)}</span>
+        </div>
+      </header>
+      
+      <div class="card-body">
+        <div class="info-grid">
           <div><label>送禮場合</label><span>${escapeHtml(r.occasion)}</span></div>
           <div><label>卡片風格</label><span>${escapeHtml(r.style)}</span></div>
-          <div><label>照片數量</label><span>${r.photo_count} 張</span></div>
-          <div><label>訂購時間</label><span>${escapeHtml(r.created_at)}</span></div>
+          <div><label>聯絡電話</label><span>${escapeHtml(r.phone) || '<i>(未提供)</i>'}</span></div>
+          <div><label>希望完成日</label><span>${escapeHtml(r.due_date) || '<i>(未指定)</i>'}</span></div>
+        </div>
+
+        <div class="text-content">
+          <label>主祝福文字</label>
+          <p>${escapeHtml(r.main_text)}</p>
+        </div>
+
+        <div class="text-content">
+          <label>其他備註</label>
+          <p>${escapeHtml(r.notes) || '<i>(無)</i>'}</p>
+        </div>
+        
+        <div class="consent-info">
+          <label>同意作為作品集：</label>
+          <span>${r.consent_portfolio ? '✅ 同意' : '❌ 未同意'}</span>
         </div>
       </div>
-      <section class="photos">${thumbs || '<p class="no-photos">此訂單沒有照片</p>'}</section>
+      
+      <footer class="card-footer">
+        <div class="footer-title">
+          客戶照片 (${r.photo_count} 張)
+        </div>
+        <div class="photos">${thumbs || '<p class="muted-text">此訂單沒有照片</p>'}</div>
+      </footer>
     </article>`;
   }).join('');
 
+  // --- 【修改點 4】更新整頁的 HTML 骨架和 CSS 樣式 ---
   return `<!DOCTYPE html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>訂單清單</title>
-<style>
-  :root { --fg: #212529; --muted: #6c757d; --border: #dee2e6; --bg: #f8f9fa; --accent: #007bff; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; max-width: 1200px; margin: 2rem auto; padding: 0 1rem; color: var(--fg); background-color: #fff; }
-  h1 { margin: 0 0 1rem; }
-  .topbar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
-  .muted { color: var(--muted); font-size: 0.9rem; }
-  .card { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 16px; margin: 1.5rem 0; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
-  .details { padding: 1.5rem; }
-  .card-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
-  .order-number { font-size: 1rem; font-weight: 700; background-color: var(--bg); color: var(--muted); padding: 0.25rem 0.75rem; border-radius: 2rem; }
-  .main-info { font-size: 1.25rem; flex-grow: 1; }
-  .main-info span { font-size: 1rem; color: var(--muted); margin: 0 0.25rem; }
-  .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
-  .meta-grid > div { display: flex; flex-direction: column; }
-  .meta-grid label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.25rem; }
-  .meta-grid span { font-weight: 500; word-break: break-all; }
-  .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; background-color: var(--bg); padding: 1.5rem; border-top: 1px solid var(--border); }
-  .no-photos { color: var(--muted); }
-  figure { margin: 0; border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem; background: #fff; position: relative; }
-  img { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; display: block; }
-  figcaption { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; white-space: pre-wrap; word-break: break-word; }
-  .single-download { position: absolute; top: 1.25rem; right: 1.25rem; background-color: rgba(0,0,0,0.5); color: white; text-decoration: none; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; transition: background-color 0.2s; }
-  .single-download:hover { background-color: rgba(0,0,0,0.8); }
-  @media (max-width: 768px) { body { margin: 1rem auto; } .topbar, .card-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; } }
-</style>
-</head><body><div class="topbar"><h1>訂單清單</h1><div class="muted">僅供內部檢視 · 最近 ${rows.length} 筆訂單</div></div>
-${items || '<p class="muted">目前沒有資料</p>'}
-</body></html>`;
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>訂單清單</title>
+  <style>
+    :root { --fg: #212529; --muted: #6c757d; --border: #dee2e6; --bg-soft: #f8f9fa; --bg-white: #fff; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: var(--fg); background-color: #f1f3f5; }
+    h1 { margin: 0 0 1rem; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1rem; }
+    .muted-text { color: var(--muted); font-size: 0.9rem; }
+    .card { border: 1px solid var(--border); border-radius: 12px; margin: 1.5rem 0; background: var(--bg-white); box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; padding: 1.25rem; background-color: var(--bg-soft); border-bottom: 1px solid var(--border); }
+    .main-info { font-size: 1.1rem; }
+    .main-info span { font-size: 0.9rem; margin: 0 0.25rem; }
+    .order-meta { text-align: right; font-size: 0.8rem; color: var(--muted); flex-shrink: 0; }
+    .order-id { font-family: monospace; display: block; }
+    .card-body { padding: 1.25rem; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .info-grid > div { display: flex; flex-direction: column; }
+    .info-grid label, .text-content label, .consent-info label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.25rem; font-weight: 500; }
+    .info-grid span, .consent-info span { font-weight: 500; word-break: break-all; }
+    .text-content { margin-bottom: 1.5rem; }
+    .text-content p { margin: 0; white-space: pre-wrap; word-break: break-word; border: 1px solid var(--border); padding: 0.75rem; border-radius: 6px; background-color: var(--bg-soft); }
+    .card-footer { padding: 1.25rem; background-color: #fcfdff; border-top: 1px solid #e9ecef; }
+    .footer-title { font-weight: bold; margin-bottom: 1rem; }
+    .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
+    figure { position: relative; margin: 0; border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem; background: var(--bg-white); }
+    img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; display: block; }
+    figcaption { font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; white-space: pre-wrap; word-break: break-word; }
+    .download-btn { position: absolute; top: 1rem; right: 1rem; width: 24px; height: 24px; background-color: rgba(0,0,0,0.6); color: white; text-decoration: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: background-color 0.2s; }
+    .download-btn:hover { background-color: rgba(0,0,0,0.9); }
+    @media (max-width: 600px) { .card-header { flex-direction: column; align-items: flex-start; } .info-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>訂單清單</h1>
+    <div class="muted-text">最近 ${rows.length} 筆訂單</div>
+  </div>
+  ${items || '<p class="muted-text" style="padding: 2rem 0;">目前沒有訂單資料</p>'}
+</body>
+</html>`;
 }
