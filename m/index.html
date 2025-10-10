@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一份來自角落的驚喜</title>
+    <style>
+        /* 引入 Google Font - 霞鶩文楷 */
+        @import url('https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&display=swap');
+
+        /* 動畫效果：淡入 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body {
+            /* 使用手寫字體 */
+            font-family: 'LXGW WenKai TC', 'Noto Serif TC', serif;
+            /* 帶有紋理質感的背景顏色 */
+            background-color: #fdfaf3;
+            /* 使用 base64 編碼的無縫紙張紋理，無需額外圖片檔 */
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3d3dtbW17e3t1dXWBgYGHh4d5eXlzc3OLi4ubm5uVlZWYmJitbW1xcXFYWFhZWVldXV2Dg4Pin5+Pj4+Ojo5TExN/f39sbGzAXEQeAAAAQklEQVR42u3QSQ0AIAADsNS/6p/wF2gEie2G5gMBOBfGjIGLwCsYwL4AD5/vYHz/dYd56gD8wkpUSLoPf3sAAAAASUVORK5CYII=');
+            color: #4a3e35; /* 柔和的深棕色文字 */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .page {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            max-width: 90%;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        p {
+            font-size: 1.5rem; /* 稍微放大字體，更有手寫感 */
+            line-height: 1.8;
+            max-width: 600px;
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+        }
+
+        /* 按鈕樣式 */
+        .button {
+            display: inline-block;
+            padding: 12px 28px;
+            background-color: transparent;
+            color: #a88c7d; /* 赤陶色 */
+            text-decoration: none;
+            border: 2px solid #a88c7d;
+            border-radius: 50px; /* 圓角按鈕 */
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-family: 'LXGW WenKai TC', serif;
+            margin-top: 10px;
+        }
+
+        .button:hover {
+            background-color: #a88c7d;
+            color: #fdfaf3;
+            transform: translateY(-2px); /* 輕微上浮效果 */
+        }
+
+        /* 超連結樣式 */
+        a {
+            color: #a88c7d;
+            text-decoration: none;
+            font-weight: 700;
+            border-bottom: 2px dotted #c5b1a7;
+            padding-bottom: 2px;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: #856a5d;
+        }
+
+        .social-buttons {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column; /* 垂直排列 */
+            gap: 15px; /* 按鈕間距 */
+        }
+
+        /* 讓手機版更好看 */
+        @media (max-width: 600px) {
+            p {
+                font-size: 1.2rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="page1" class="page active">
+        <div>
+            <p>謝謝你在茫茫物海(?<br>發現了我</p>
+            <button class="button" onclick="showPage('page2')">輕點這裡</button>
+        </div>
+    </div>
+
+    <div id="page2" class="page">
+        <div>
+            <p>這個東西找到就是你的了！<br>可以放心的帶走沒關係❤️</p>
+            <button class="button" onclick="showPage('page3')">下一頁</button>
+        </div>
+    </div>
+
+    <div id="page3" class="page">
+        <div>
+            <p>然後！第一個我不是詐騙</p>
+            <button class="button" onclick="showPage('page4')">接著說</button>
+        </div>
+    </div>
+
+    <div id="page4" class="page">
+        <div>
+            <p>因為你是第一個，<br>所以可以聯絡 <a href="https://www.instagram.com/dddpcreate/" target="_blank">@dddpcreate</a>！<br>我會再送你一個東西。</p>
+            <button class="button" onclick="showPage('page5')">還有一件小事...</button>
+        </div>
+    </div>
+
+    <div id="page5" class="page">
+        <div>
+            <p>如果可以的話！<br>也可以追蹤我的IG和Threads，<br>或幫我分享❤️。</p>
+            <div class="social-buttons">
+                <a href="https://www.instagram.com/dddpcreate/" target="_blank" class="button">追蹤 Instagram</a>
+                <a href="https://www.threads.net/@dddpcreate" target="_blank" class="button">追蹤 Threads</a>
+            </div>
+            <button class="button" onclick="showPage('page6')" style="margin-top: 30px;">最後</button>
+        </div>
+    </div>
+
+    <div id="page6" class="page">
+        <div>
+            <h1>謝謝你的支持</h1>
+            <p>祝你玩得愉快！</p>
+        </div>
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            const nextPage = document.getElementById(pageId);
+            // 重新觸發動畫
+            nextPage.classList.remove('active');
+            void nextPage.offsetWidth; // 技巧：觸發瀏覽器重繪
+            nextPage.classList.add('active');
+        }
+    </script>
+
+</body>
+</html>
